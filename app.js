@@ -680,7 +680,8 @@
 
     panels.forEach(function (panel) {
       var id = panel.id.replace("panel-", "");
-      var visible = id === panelId;
+      var page = panel.getAttribute("data-page") || id;
+      var visible = page === panelId || id === panelId;
       panel.classList.toggle("is-visible", visible);
       panel.hidden = !visible;
     });
@@ -762,7 +763,7 @@
         if (!confirm("Nulstille alle afkrydsninger på denne enhed?")) return;
         saveChecks({});
         document
-          .querySelectorAll("#panel-install .checklist input[type=checkbox]")
+          .querySelectorAll('.checklist input[type="checkbox"]')
           .forEach(function (cb) {
             cb.checked = false;
           });
@@ -1283,20 +1284,154 @@
         success:
           "Korrekt. 4/3/1 er en fælles kommandoadresse, som flere aktuatorobjekter kan lytte på. DPT 1.xxx passer til sluk/tænd.",
       },
+      {
+        step: "Trin 6 · Procentværdi",
+        focus: "Panel sætter lyset til præcis 60 %",
+        text:
+          "Fra et touchpanel skal brugeren kunne sætte lyset i 406A/B til en præcis værdi, fx 60 %. Det er ikke længere op-/nedtrin, men en absolut værdi.",
+        path: ["Brugeren skubber slider til 60 %", "Panel sender procentværdi", "Dæmperen modtager 1-byte værdi", "Lyset stiller sig på 60 %"],
+        facts: [
+          "Det er en absolut værdi, ikke en relativ dæmpning.",
+          "1 byte (0–255) bruges som 0–100 % i DPT 5.001.",
+          "Adressen er forskellig fra langt-tryk-dæmpning op/ned.",
+        ],
+        ga: "4/2/2",
+        dpt: "5",
+        gaOptions: ["4/2/1", "4/2/2", "4/2/3", "4/0/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/2/2 er dæmpeværdien, og DPT 5.001 sender 0–100 % i én byte. DPT 3.xxx (relativ) bruges kun ved langt tryk op/ned.",
+      },
+      {
+        step: "Trin 7 · Dæmpestatus",
+        focus: "Aktuator melder aktuelt lysniveau",
+        text:
+          "Visualiseringen skal vise det aktuelle lysniveau som tal og slider. Det er ikke en kommando – aktuatoren skal melde tilbage, hvor lyset står.",
+        path: ["Dæmperen ændrer lysniveau", "Status-objekt sender 1-byte værdi", "Visualisering modtager status", "Slider og tal opdateres på panelet"],
+        facts: [
+          "Status er afsendt af aktuatoren, ikke af panelet.",
+          "Værdien er 0–100 %, så samme datatype som dæmpeværdien.",
+          "Status bør ikke ligge på samme adresse som kommandoen.",
+        ],
+        ga: "4/2/3",
+        dpt: "5",
+        gaOptions: ["4/2/1", "4/2/2", "4/2/3", "4/1/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/2/3 er status for dæmpeværdien, og DPT 5.001 (0–100 %) bruges også her. Kommando og status holdes adskilt på hver sin adresse.",
+      },
+      {
+        step: "Trin 8 · Persienne kør",
+        focus: "Langt tryk kører persienne op eller ned",
+        text:
+          "Et tryk i lokalet skal styre persienne i vinduet. Langt tryk skal sende kør op/ned, indtil persienne når sin endeposition eller stoppes.",
+        path: ["Bruger holder tryk inde", "Trykkets ‘Move’-objekt sender op eller ned", "Persienne-aktuator modtager 1-bit retning", "Motoren kører i den retning"],
+        facts: [
+          "Op/ned er stadig en 1-bit værdi (0 = op, 1 = ned i DPT 1.008).",
+          "Den må ikke deles med stop/step på kort tryk.",
+          "Funktionen ligger uden for lys-mellemgruppen.",
+        ],
+        ga: "4/4/1",
+        dpt: "1",
+        gaOptions: ["4/4/1", "4/4/2", "4/2/1", "4/0/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/4/1 er kør-op/ned for persiennen og bruger DPT 1.008 (1 bit Up/Down). Stop og lamel ligger på sin egen adresse.",
+      },
+      {
+        step: "Trin 9 · Persienne stop",
+        focus: "Kort tryk stopper eller justerer lamel",
+        text:
+          "Det samme tryk skal med kort tryk stoppe persiennen, mens den kører – eller justere lamel-vinklen et lille trin, hvis den allerede står stille.",
+        path: ["Bruger trykker kort", "Trykkets ‘Stop/Step’-objekt sender", "Persienne-aktuator modtager 1-bit step", "Motor stopper eller lamel drejer ét trin"],
+        facts: [
+          "Kort tryk og langt tryk skal have hver sin gruppeadresse.",
+          "Stop/step er en 1-bit værdi (DPT 1.007), men en anden funktion end Up/Down.",
+          "Funktionen hører ikke til på lys-adresserne.",
+        ],
+        ga: "4/4/2",
+        dpt: "1",
+        gaOptions: ["4/4/1", "4/4/2", "4/2/1", "4/3/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/4/2 er stop/step på persienne og bruger DPT 1.007 (Step). Den må ikke ligge sammen med kør-op/ned, ellers stopper persienne hver gang du holder trykket.",
+      },
+      {
+        step: "Trin 10 · Setpoint",
+        focus: "Panel sender ønsket rumtemperatur",
+        text:
+          "Brugeren stiller ønsket rumtemperatur til 21,5 °C på panelet. Værdien skal sendes til termostaten/HVAC-aktuatoren som et setpoint.",
+        path: ["Bruger ændrer setpoint på panel", "Panelets setpoint-objekt sender 2-byte float", "Termostat/HVAC modtager værdien", "Setpoint i regulatoren opdateres"],
+        facts: [
+          "Det er en måleværdi, ikke tænd/sluk.",
+          "Temperatur sendes som 2-byte float (DPT 9.001) i °C.",
+          "Setpoint og aktuel temperatur er to forskellige adresser.",
+        ],
+        ga: "4/5/1",
+        dpt: "9",
+        gaOptions: ["4/5/1", "4/5/2", "4/2/2", "4/0/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/5/1 er setpoint, og temperatur sendes som DPT 9.001 (2 byte float, °C). 1 byte ville være for upræcist, og 1 bit kan ikke beskrive en temperatur.",
+      },
+      {
+        step: "Trin 11 · Sensorværdi",
+        focus: "Temperatursensor melder aktuel temperatur",
+        text:
+          "En rumføler i 406A/B skal melde den aktuelle temperatur til både panel og HVAC-regulering, så de altid kan vise og regne på den rigtige værdi.",
+        path: ["Sensor måler 21,2 °C", "Sensorens måleobjekt sender 2-byte float", "Panel og HVAC modtager værdien", "Skærm opdateres og regulering bruger målingen"],
+        facts: [
+          "Sensoren er afsenderen, ikke modtageren.",
+          "Aktuel temperatur er en målestatus – egen adresse i forhold til setpoint.",
+          "Datatypen er stadig 2-byte float (DPT 9.001).",
+        ],
+        ga: "4/5/2",
+        dpt: "9",
+        gaOptions: ["4/5/1", "4/5/2", "4/1/1", "4/2/3"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. 4/5/2 er den aktuelle temperatur fra sensoren, og DPT 9.001 (2 byte float) bruges igen. Setpoint og målt temperatur skal aldrig dele adresse.",
+      },
+      {
+        step: "Trin 12 · Scenekald",
+        focus: "Tryk kalder scene 'Møde' (lys + persienne)",
+        text:
+          "Et scene-tryk skal kalde scenen ‘Møde’: lys på 80 %, persienne kørt halvt ned, projektor klar. Alle berørte aktuatorer skal lytte på samme scenekald.",
+        path: ["Bruger trykker scene-knap", "Trykkets scene-objekt sender scene-nummer", "Lys-, persienne- og AV-aktuatorer modtager", "Hver aktuator afspiller sine forudgemte værdier"],
+        facts: [
+          "Et scenekald sender et scene-nummer, ikke en lysværdi.",
+          "Flere aktuatorer lytter på samme scene-adresse.",
+          "DPT 18.001 indeholder både scene-nummer og en flag for ‘kald’ vs. ‘gem’.",
+        ],
+        ga: "4/6/1",
+        dpt: "18",
+        gaOptions: ["4/6/1", "4/3/1", "4/2/2", "4/0/1"],
+        dptOptions: ["1", "5", "17", "18"],
+        success:
+          "Korrekt. 4/6/1 er scenekaldet, og DPT 18.001 (1 byte Scene Control) bruges, så samme adresse både kan kalde og gemme scener. Aktuatorerne har selv gemt deres egen lys-, persienne- og AV-værdi for hver scene.",
+      },
     ];
     var gaLabels = {
-      "4/0/1": "4/0/1 – 4. Sal – Lok. 406A/B – Tænd/sluk udgang 1",
-      "4/0/2": "4/0/2 – 4. Sal – Lok. 406A/B – Tænd/sluk udgang 2",
-      "4/1/1": "4/1/1 – 4. Sal – Lys – Status udgang 1",
-      "4/2/1": "4/2/1 – 4. Sal – Lys – Dæmpning lok. 406A/B",
-      "4/2/2": "4/2/2 – 4. Sal – Lys – Dæmpeværdi lok. 406A/B",
-      "4/3/1": "4/3/1 – 4. Sal – Lys – Fælles sluk",
+      "4/0/1": "4/0/1 – Lok. 406A/B – Tænd/sluk udgang 1",
+      "4/0/2": "4/0/2 – Lok. 406A/B – Tænd/sluk udgang 2",
+      "4/1/1": "4/1/1 – Lys – Status udgang 1",
+      "4/2/1": "4/2/1 – Lys – Dæmpning op/ned (langt tryk)",
+      "4/2/2": "4/2/2 – Lys – Dæmpeværdi (sæt 0–100 %)",
+      "4/2/3": "4/2/3 – Lys – Status dæmpeværdi (0–100 %)",
+      "4/3/1": "4/3/1 – Fælles sluk hele etagen",
+      "4/4/1": "4/4/1 – Persienne – Kør op/ned",
+      "4/4/2": "4/4/2 – Persienne – Stop / lameljustering",
+      "4/5/1": "4/5/1 – Temperatur – Setpoint rum",
+      "4/5/2": "4/5/2 – Temperatur – Aktuel måling (sensor)",
+      "4/6/1": "4/6/1 – Scenekald (Møde / Aften / Rengøring)",
     };
     var dptLabels = {
-      1: "DPT 1.xxx – 1 bit tænd/sluk",
-      3: "DPT 3.xxx – 4 bit dæmp relativt",
-      5: "DPT 5.xxx – 1 byte værdi/procent",
-      9: "DPT 9.xxx – 2 byte flydende værdi",
+      1: "DPT 1.xxx – 1 bit (tænd/sluk, op/ned, stop/step)",
+      3: "DPT 3.xxx – 4 bit (relativ dæmpning op/ned)",
+      5: "DPT 5.xxx – 1 byte (værdi 0–100 %)",
+      9: "DPT 9.xxx – 2 byte float (temperatur, lux, fugt)",
+      17: "DPT 17.xxx – 1 byte (scene-nummer)",
+      18: "DPT 18.xxx – 1 byte (Scene Control: kald/gem)",
     };
 
     if (
@@ -1374,34 +1509,20 @@
         return;
       }
 
+      var dptHints = {
+        1: "DPT 1.xxx er kun 1 bit – tænd/sluk, op/ned eller stop/step. Det kan ikke beskrive procent, temperatur eller scenekald.",
+        3: "DPT 3.xxx er 4-bit relativ dæmpning – kun korrekt ved langt tryk op/ned, ikke ved en præcis værdi eller en almindelig kommando.",
+        5: "DPT 5.xxx er 1 byte (0–100 %). Brug den, når der skal sendes en absolut procentværdi til et lys, ikke tænd/sluk eller temperatur.",
+        9: "DPT 9.xxx er 2-byte float til måleværdier som temperatur, lux og fugt. Den passer ikke til en simpel kommando eller procent.",
+        17: "DPT 17.xxx er kun et scene-nummer. I moderne anlæg vælger man typisk DPT 18.xxx, så samme telegram både kan kalde og gemme scener.",
+        18: "DPT 18.xxx er ‘Scene Control’ – 1 byte med scene-nummer + et flag for kald/gem. Den hører kun til på en scene-adresse.",
+      };
+
       if (ga === scenario.ga && dpt !== scenario.dpt) {
+        var hint = dptHints[dpt] || "DPT'en passer ikke til værditypen i scenariet.";
         setResult(
           "is-warn",
-          "Gruppeadressen passer til funktionen, men DPT'en passer ikke. Kig på værditypen: er det 1-bit tænd/sluk, relativ dæmpning eller en måleværdi?"
-        );
-        return;
-      }
-
-      if (ga === "4/1/1" && scenario.ga !== "4/1/1") {
-        setResult(
-          "is-warn",
-          "Du har valgt en statusadresse. Status er tilbagemelding fra relæ/visualisering, ikke selve betjeningskommandoen."
-        );
-        return;
-      }
-
-      if (ga === "4/2/1" || dpt === "3") {
-        setResult(
-          "is-warn",
-          "Du har valgt noget, der hører til relativ dæmpning. Det er kun korrekt, når scenariet handler om langt tryk eller dæmpning op/ned."
-        );
-        return;
-      }
-
-      if (ga === "4/0/1" && scenario.ga === "4/0/2") {
-        setResult(
-          "is-warn",
-          "4/0/1 er allerede brugt til udgang 1. Når udgang 2 skal være uafhængig, skal den have sin egen tænd/sluk-adresse."
+          "Gruppeadressen er rigtig, men DPT'en passer ikke. " + hint
         );
         return;
       }
@@ -1409,14 +1530,77 @@
       if (ga !== scenario.ga && dpt === scenario.dpt) {
         setResult(
           "is-warn",
-          "DPT'en passer til værditypen, men gruppeadressen matcher ikke signalvejen. Følg afsender, funktion og modtager én gang mere."
+          "DPT'en passer til værditypen, men gruppeadressen matcher ikke signalvejen. Spørg: hvem sender, hvem modtager, og hvilken funktion handler det om?"
         );
         return;
       }
 
+      if (scenario.ga === "4/1/1" && ga !== "4/1/1") {
+        setResult(
+          "is-warn",
+          "Scenariet handler om en tilbagemelding (status). Status sendes af aktuatoren, ikke af trykket – og bør ligge på sin egen status-adresse."
+        );
+        return;
+      }
+
+      if (scenario.ga !== "4/1/1" && ga === "4/1/1") {
+        setResult(
+          "is-warn",
+          "Du har valgt status-adressen, men scenariet er en kommando. Status er kun tilbagemelding fra aktuatoren, ikke det tryk skal sende."
+        );
+        return;
+      }
+
+      if (scenario.ga === "4/0/2" && ga === "4/0/1") {
+        setResult(
+          "is-warn",
+          "4/0/1 er allerede taget af udgang 1. Når udgang 2 skal kunne styres uafhængigt, skal den have sin egen tænd/sluk-adresse."
+        );
+        return;
+      }
+
+      if (
+        (scenario.ga === "4/4/1" || scenario.ga === "4/4/2") &&
+        ga !== "4/4/1" && ga !== "4/4/2"
+      ) {
+        setResult(
+          "is-warn",
+          "Scenariet handler om persienne. Persienne hører til på sin egen mellemgruppe (4/4/x) – ikke sammen med lys eller fælles sluk."
+        );
+        return;
+      }
+
+      if (
+        (scenario.ga === "4/5/1" || scenario.ga === "4/5/2") &&
+        dpt !== "9"
+      ) {
+        setResult(
+          "is-warn",
+          "Temperaturer er måleværdier. Brug DPT 9.xxx (2-byte float) – 1 bit kan ikke beskrive en temperatur, og 1 byte er for upræcist."
+        );
+        return;
+      }
+
+      if (scenario.ga === "4/6/1" && dpt !== "18") {
+        setResult(
+          "is-warn",
+          "Et scenekald skal sende et scene-nummer. DPT 18.001 bruges, så samme telegram både kan kalde og gemme scener."
+        );
+        return;
+      }
+
+      if (scenario.ga === "4/2/2" && dpt === "3") {
+        setResult(
+          "is-warn",
+          "DPT 3.xxx er relativ dæmpning (op/ned). Når der skal sendes en præcis værdi som 60 %, skal du bruge DPT 5.001 (1 byte 0–100 %)."
+        );
+        return;
+      }
+
+      var stillHint = dptHints[dpt] ? " " + dptHints[dpt] : "";
       setResult(
         "is-warn",
-        "Ikke helt. Start med at spørge: er det kommando, status, dæmpning eller fællesfunktion? Vælg derefter adressen for netop den funktion."
+        "Ikke helt. Spørg dig selv: er det kommando, status, præcis værdi, måling, persienne eller scene? Vælg derefter den adresse og DPT der passer." + stillHint
       );
     });
 
