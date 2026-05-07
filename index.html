@@ -293,7 +293,7 @@
             <p class="fact-hero__eyebrow">Kort sagt</p>
             <h3 id="fact-hero-title">KNX er hændelsesstyret</h3>
             <p>
-              Enheder står ikke og spørger hinanden hele tiden. De sender telegrammer, når noget sker:
+              Enheder står ikke og spørger hinanden hele tiden. De sender et telegram, når noget sker:
               et tryk aktiveres, en sensor måler en ændring, eller en aktuator melder status tilbage.
             </p>
           </div>
@@ -304,34 +304,64 @@
           </div>
         </section>
 
+        <section class="topology-card card" aria-labelledby="topology-title">
+          <div class="topology-card__copy">
+            <p class="fact-hero__eyebrow">KNX-topologi</p>
+            <h3 id="topology-title">Fra backbone til almindelig linje</h3>
+            <p>
+              Tænk KNX som et el-anlæg med niveauer. Backbone ligger øverst, områder hænger på,
+              hovedlinjen fordeler i området, og de almindelige linjer går ud til enhederne.
+            </p>
+          </div>
+
+          <div class="topology-flow" aria-label="KNX topologi fra backbone til enhed">
+            <div class="topology-flow__node topology-flow__node--backbone">
+              <span>Backbone</span>
+              <strong>Fælles rygrad</strong>
+            </div>
+            <div class="topology-flow__node topology-flow__node--area">
+              <span>Område</span>
+              <strong>Fx bygning eller etage</strong>
+            </div>
+            <div class="topology-flow__node topology-flow__node--mainline">
+              <span>Hovedlinje</span>
+              <strong>Fordeler i området</strong>
+            </div>
+            <div class="topology-flow__node topology-flow__node--line">
+              <span>Linje</span>
+              <strong>Tryk, sensorer og aktuatorer</strong>
+            </div>
+          </div>
+        </section>
+
         <h3 class="section-title">Begreber der ofte forveksles</h3>
         <div class="facts-grid">
-          <article class="card fact-card">
+          <article class="card fact-card fact-card--backbone">
             <h3>Backbone</h3>
             <p>
-              Backbone er den øverste buslinje i en større KNX-installation. Den forbinder områder
-              via områdekoblere og bruges som den fælles struktur, som resten af anlægget hænger på.
+              Backbone er det øverste niveau i en større KNX-installation. Det kan være et fysisk
+              buskabel eller KNX/IP, men det er ikke bare “det første grønne kabel”.
             </p>
           </article>
-          <article class="card fact-card">
+          <article class="card fact-card fact-card--area">
             <h3>Område, hovedlinje og linje</h3>
             <p>
-              Et KNX-netværk bygges hierarkisk: backbone øverst, derefter områder med hovedlinjer
-              og til sidst de almindelige linjer, hvor sensorer, aktuatorer og betjeningsenheder sidder.
+              Et KNX-anlæg bygges i niveauer: backbone øverst, derefter områder med hovedlinjer
+              og til sidst de almindelige linjer, hvor tryk, sensorer og aktuatorer sidder.
             </p>
           </article>
-          <article class="card fact-card">
+          <article class="card fact-card fact-card--mainline">
             <h3>Koblere</h3>
             <p>
               En områdekobler forbinder backbone med et område. En linjekobler forbinder en hovedlinje
               med en underlinje og kan filtrere telegrammer, så kun relevant trafik sendes videre.
             </p>
           </article>
-          <article class="card fact-card">
+          <article class="card fact-card fact-card--line">
             <h3>Linje og segment</h3>
             <p>
-              En linje er en del af KNX-bussen med sin egen struktur og adresseområde. Et segment er
-              et fysisk stykke af linjen, fx mellem strømforsyning, linjekobler og linjeforstærker.
+              En linje er den del af KNX-bussen, hvor enhederne sidder. Et segment er et fysisk
+              stykke af linjen med egne længdegrænser, fx efter en linjeforstærker.
             </p>
           </article>
           <article class="card fact-card">
@@ -398,6 +428,22 @@
             <li><strong>Monitorer:</strong> Group Monitor bruges til gruppekommunikation; Bus Monitor er mere rå og bruges typisk mere forsigtigt.</li>
           </ul>
         </div>
+
+        <section class="quick-test card" data-quick-test aria-labelledby="overview-test-title">
+          <div>
+            <p class="quick-test__eyebrow">Test dig selv</p>
+            <h3 id="overview-test-title">Hvad er gruppeadressen?</h3>
+            <p>Hvilken forklaring passer bedst til en gruppeadresse i KNX?</p>
+          </div>
+          <div class="quick-test__answers">
+            <button type="button" data-correct="false">Den fysiske placering på buskablet</button>
+            <button type="button" data-correct="true">Funktionens adresse, som objekter kommunikerer på</button>
+            <button type="button" data-correct="false">Navnet på produktdatabasen i ETS</button>
+          </div>
+          <p class="quick-test__feedback" aria-live="polite">
+            Rigtigt svar: Gruppeadressen samler de objekter, der skal sende og modtage samme funktion.
+          </p>
+        </section>
       </section>
 
       <!-- ETS træning -->
@@ -549,20 +595,58 @@
           </article>
         </div>
 
+        <section class="quick-test card" data-quick-test aria-labelledby="ets-test-title">
+          <div>
+            <p class="quick-test__eyebrow">Test dig selv</p>
+            <h3 id="ets-test-title">Hvad skal downloades efter linkændringer?</h3>
+            <p>Du har ændret gruppeadresselinks på en aktuator i ETS. Hvad er næste praktiske skridt?</p>
+          </div>
+          <div class="quick-test__answers">
+            <button type="button" data-correct="false">Kun gemme projektet</button>
+            <button type="button" data-correct="true">Downloade applikationen til enheden</button>
+            <button type="button" data-correct="false">Slette den fysiske adresse</button>
+          </div>
+          <p class="quick-test__feedback" aria-live="polite">
+            Rigtigt svar: Link- og parameterændringer skal downloades som applikation, før enheden virker efter den nye opsætning.
+          </p>
+        </section>
+
         <section class="ets-exercise card" aria-labelledby="ets-exercise-title">
           <div class="ets-exercise__header">
             <div>
               <p class="ets-exercise__eyebrow">Scenarietræning</p>
-              <h3 id="ets-exercise-title">Vælg gruppeadresse og DPT</h3>
+              <h3 id="ets-exercise-title">Følg signalvejen i ETS</h3>
             </div>
-            <span class="ets-exercise__tag" id="ets-exercise-progress">1 / 4</span>
+            <span class="ets-exercise__tag" id="ets-exercise-progress">Trin 1 / 5</span>
           </div>
 
-          <p id="ets-scenario-text">
-            Scenarie: Det venstre tryk skal tænde/slukke udgang 1 på Hager-relæet i lokale 406A/B.
-            Hvilken gruppeadresse og datapunkttype passer bedst?
+          <p class="ets-exercise__lead">
+            Arbejd trin for trin: find først funktionen, derefter hvem der sender og modtager,
+            og vælg til sidst den gruppeadresse og DPT der passer til objektet.
           </p>
-          <ul class="ets-scenario-facts" id="ets-scenario-facts"></ul>
+
+          <div class="ets-scenario-card">
+            <div class="ets-scenario-card__topline">
+              <span class="ets-scenario-card__badge" id="ets-scenario-step">Tænd/sluk</span>
+              <strong id="ets-scenario-focus">Kommando fra tryk til relæ</strong>
+            </div>
+            <p id="ets-scenario-text">
+              Scenarie: Det venstre tryk skal tænde/slukke udgang 1 på Hager-relæet i lokale 406A/B.
+              Hvilken gruppeadresse og datapunkttype passer bedst?
+            </p>
+          </div>
+
+          <div class="ets-scenario-layout">
+            <section class="ets-scenario-panel" aria-labelledby="ets-signal-path-title">
+              <h4 id="ets-signal-path-title">Signalvej</h4>
+              <ol class="ets-signal-path" id="ets-signal-path"></ol>
+            </section>
+
+            <section class="ets-scenario-panel" aria-labelledby="ets-thinking-title">
+              <h4 id="ets-thinking-title">Tænk sådan</h4>
+              <ul class="ets-scenario-facts" id="ets-scenario-facts"></ul>
+            </section>
+          </div>
 
           <form class="ets-exercise__form" id="ets-exercise-form">
             <label>
@@ -581,6 +665,7 @@
 
             <div class="toolbar">
               <button type="submit" class="btn">Tjek svar</button>
+              <button type="button" class="btn btn--ghost" id="ets-prev-scenario">Forrige scenarie</button>
               <button type="button" class="btn btn--ghost" id="ets-next-scenario">Næste scenarie</button>
               <button type="reset" class="btn btn--ghost">Nulstil</button>
             </div>
@@ -614,6 +699,38 @@
           </span>
         </div>
 
+        <section class="dist-section" aria-labelledby="dist-heading-topology">
+          <h3 id="dist-heading-topology" class="dist-section__title">Busstruktur i praksis</h3>
+          <p class="dist-section__lead">
+            Det grønne kabel er KNX TP-bussen. Om kablet kaldes linje, hovedlinje eller backbone
+            afhænger af placeringen i topologien. I små øveanlæg har du ofte kun én almindelig linje.
+          </p>
+
+          <div class="simple-topology card" aria-label="Simpel KNX topologi">
+            <div class="simple-topology__block">
+              <h4>Lille øveanlæg</h4>
+              <p class="simple-topology__line">
+                PSU 30 V → grønt KNX TP-kabel → tryk / sensor / aktuator
+              </p>
+              <p>
+                Her kabler du normalt bare én almindelig KNX-linje. Det er den type opstilling,
+                man ofte møder på skolebordet.
+              </p>
+            </div>
+
+            <div class="simple-topology__block">
+              <h4>Større anlæg</h4>
+              <p class="simple-topology__line">
+                Backbone → områdekobler → hovedlinje → linjekobler → almindelig linje → enheder
+              </p>
+              <p>
+                Backbone er et topologi-niveau. Det kan være fysisk KNX-kabel eller KNX/IP,
+                men det er ikke bare det første grønne kabel i installationen.
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section class="dist-section" aria-labelledby="dist-heading-abbr">
           <h3 id="dist-heading-abbr" class="dist-section__title">Begreber på diagrammet</h3>
           <p class="dist-section__lead">
@@ -642,7 +759,7 @@
             <div>
               <dt>DVC</dt>
               <dd>
-                Enhed på linjen – i diagrammer bruges „device“ bredt (sensorer, aktuatorer …).
+                Enhed på linjen. I diagrammer bruges „device“ bredt om tryk, sensorer, aktuatorer osv.
               </dd>
             </div>
           </dl>
@@ -664,8 +781,8 @@
               </li>
               <li>
                 <strong>Fælles punkt:</strong> begge har <strong>fysisk bus-adresse</strong>, tilsluttes TP‑linjen
-                og tæller med i segment-/programmeringsarbejdet – men rollen er forskellig: LF er „infrastruktur på
-                linen“, aktuatoren er „det der laver noget i installationen“.
+                og tæller med i segment-/programmeringsarbejdet. Rollen er forskellig: LF er infrastruktur
+                på linjen, mens aktuatoren udfører en funktion i installationen.
               </li>
             </ul>
           </div>
@@ -783,6 +900,22 @@
             </div>
             <div class="distance-results" id="distance-results" role="status" aria-live="polite"></div>
           </form>
+
+          <section class="quick-test card" data-quick-test aria-labelledby="distance-test-title">
+            <div>
+              <p class="quick-test__eyebrow">Test dig selv</p>
+              <h3 id="distance-test-title">Hvilket tal hører til PSU → enhed?</h3>
+              <p>Du skal kontrollere længste stræk fra strømforsyning til fjerneste enhed.</p>
+            </div>
+            <div class="quick-test__answers">
+              <button type="button" data-correct="false">1000 m</button>
+              <button type="button" data-correct="true">350 m</button>
+              <button type="button" data-correct="false">700 m</button>
+            </div>
+            <p class="quick-test__feedback" aria-live="polite">
+              Rigtigt svar: Typisk maks. 350 m fra den relevante PSU til fjerneste enhed på segmentet.
+            </p>
+          </section>
         </section>
       </section>
 

@@ -2,7 +2,6 @@
   "use strict";
 
   var STORAGE_KEY = "m26-knx-checklist";
-  var STORAGE_KEY_REMOTE = "m26-knx-remote-checklist";
 
   var checklistItems = {
     prep: [
@@ -34,27 +33,6 @@
       "Opdatér gruppeadressenavne, så næste person kan forstå placering og funktion.",
       "Dokumentér hvilke enheder der er downloadet, og hvilke funktioner der er testet.",
       "Aflever kort testnotat med gruppeadresser, fysisk adressering og eventuelle kendte afvigelser.",
-    ],
-  };
-
-  var remoteChecklistItems = {
-    net: [
-      "Fjernadgang sker via aftalt og dokumenteret metode (fx VPN eller leverandørens godkendte løsning).",
-      "Bygningsautomation er på eget netsegment eller isoleret zone – ikke direkte ud på usikret gæste-Wi-Fi.",
-      "Firewall/regler er gennemgået: kun nødvendige porte og målrettede tilladelser.",
-      "Der findes kontaktperson ved leverandør og hos kunden ved hændelser.",
-    ],
-    accounts: [
-      "Personlige konti – ingen delte „standard“-adgangskoder på tværs af kunder.",
-      "Multifaktor eller stærke adgangskoder hvor systemet understøtter det.",
-      "Rettigheder er mindst mulige (hvem må konfigurere vs. kun overvåge).",
-      "Adgang tilbagekaldes ved medarbejder-skift eller projektafslutning.",
-    ],
-    ops: [
-      "Firmware/software på gateways og relevante enheder er noteret og opdateringsplan aftalt.",
-      "Logning/alarmer ved fejl eller uventet adgang er konfigureret efter behov og lovgrundlag.",
-      "Ændringer i fjernopsætning dokumenteres (hvad, hvornår, hvem).",
-      "Backup af projektfiler og konfiguration findes og er testet til genindlæsning.",
     ],
   };
 
@@ -750,23 +728,6 @@
     }
   }
 
-  function loadRemoteChecks() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY_REMOTE);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function saveRemoteChecks(map) {
-    try {
-      localStorage.setItem(STORAGE_KEY_REMOTE, JSON.stringify(map));
-    } catch (e) {
-      /* ignore */
-    }
-  }
-
   function initChecklists() {
     var stored = loadChecks();
 
@@ -802,50 +763,6 @@
         saveChecks({});
         document
           .querySelectorAll("#panel-install .checklist input[type=checkbox]")
-          .forEach(function (cb) {
-            cb.checked = false;
-          });
-      });
-    }
-  }
-
-  function initRemoteChecklists() {
-    var stored = loadRemoteChecks();
-
-    Object.keys(remoteChecklistItems).forEach(function (key) {
-      var ul = document.querySelector(
-        '.checklist--remote[data-remote-checklist="' + key + '"]'
-      );
-      if (!ul) return;
-
-      remoteChecklistItems[key].forEach(function (text, index) {
-        var id = "remote-" + key + "-" + index;
-        var li = document.createElement("li");
-        var cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.id = id;
-        cb.checked = !!stored[id];
-        cb.addEventListener("change", function () {
-          var m = loadRemoteChecks();
-          m[id] = cb.checked;
-          saveRemoteChecks(m);
-        });
-        var label = document.createElement("label");
-        label.setAttribute("for", id);
-        label.textContent = text;
-        li.appendChild(cb);
-        li.appendChild(label);
-        ul.appendChild(li);
-      });
-    });
-
-    var resetBtn = document.getElementById("btn-remote-checklist-reset");
-    if (resetBtn) {
-      resetBtn.addEventListener("click", function () {
-        if (!confirm("Nulstille fjernadgang-checklisten på denne enhed?")) return;
-        saveRemoteChecks({});
-        document
-          .querySelectorAll(".checklist--remote input[type=checkbox]")
           .forEach(function (cb) {
             cb.checked = false;
           });
@@ -1268,84 +1185,103 @@
     var result = document.getElementById("ets-exercise-result");
     var scenarioText = document.getElementById("ets-scenario-text");
     var scenarioFacts = document.getElementById("ets-scenario-facts");
+    var scenarioStep = document.getElementById("ets-scenario-step");
+    var scenarioFocus = document.getElementById("ets-scenario-focus");
+    var signalPath = document.getElementById("ets-signal-path");
     var progress = document.getElementById("ets-exercise-progress");
+    var prevBtn = document.getElementById("ets-prev-scenario");
     var nextBtn = document.getElementById("ets-next-scenario");
     var scenarioIndex = 0;
     var scenarios = [
       {
+        step: "Trin 1 · Kommando",
+        focus: "Tryk styrer relæudgang 1",
         text:
-          "Scenarie 1: Du står i ETS og skal linke venstre tryk i lokale 406A/B til udgang 1 på Hager-relæet. Hvilken gruppeadresse og DPT vælger du?",
+          "Du står i ETS og skal linke venstre tryk i lokale 406A/B til udgang 1 på Hager-relæet. Målet er en almindelig tænd/sluk-kommando.",
+        path: ["Bruger trykker venstre tryk", "Trykkets Switch-objekt sender", "Relæets udgang 1 modtager", "Lampen tænder/slukker"],
         facts: [
-          "Trykobjektet hedder Switch og sender 1 bit.",
-          "Relæets udgang 1 har et modtageobjekt til tænd/sluk.",
-          "Visualisering skal først kobles på senere.",
+          "Funktionen er kommando, ikke status.",
+          "Afsender og modtager skal ligge på samme gruppeadresse.",
+          "Tænd/sluk er en 1-bit værdi, altså DPT 1.xxx.",
         ],
         ga: "4/0/1",
         dpt: "1",
         gaOptions: ["4/0/1", "4/0/2", "4/1/1", "4/3/1"],
         dptOptions: ["1", "3", "5", "9"],
         success:
-          "Korrekt. Venstre tryks 1-bit objekt og Hager-relæets udgang 1 linkes på 4/0/1: 4. Sal – Lok. 406A/B – Tænd/sluk udgang 1.",
+          "Korrekt. Trykkets Switch-objekt og relæets udgang 1 skal begge linkes til 4/0/1. DPT 1.xxx passer, fordi kommandoen kun er tænd/sluk.",
       },
       {
+        step: "Trin 2 · Separat funktion",
+        focus: "Højre tryk styrer relæudgang 2",
         text:
-          "Scenarie 2: Højre tryk skal styre en anden lampe på udgang 2. Begge lamper sidder i lokale 406A/B, men må ikke tænde samtidig. Hvad vælger du?",
+          "Højre tryk skal styre en anden lampe på udgang 2 i samme lokale. Den må ikke følge udgang 1, så funktionen skal have sin egen adresse.",
+        path: ["Bruger trykker højre tryk", "Trykkets Switch-objekt sender", "Relæets udgang 2 modtager", "Kun lampe 2 tænder/slukker"],
         facts: [
-          "Udgang 1 er allerede brugt til venstre tryk.",
-          "Udgang 2 skal have sin egen funktion.",
-          "Funktionen er stadig almindelig tænd/sluk.",
+          "Samme lokale betyder ikke nødvendigvis samme gruppeadresse.",
+          "Udgang 2 skal holdes adskilt fra udgang 1.",
+          "Funktionen er stadig tænd/sluk, så DPT ændrer sig ikke.",
         ],
         ga: "4/0/2",
         dpt: "1",
         gaOptions: ["4/0/1", "4/0/2", "4/1/1", "4/2/1"],
         dptOptions: ["1", "3", "5", "9"],
         success:
-          "Korrekt. Udgang 2 skal have sin egen tænd/sluk-gruppeadresse: 4/0/2. DPT 1.xxx passer til 1-bit tænd/sluk.",
+          "Korrekt. Udgang 2 får sin egen tænd/sluk-adresse: 4/0/2. DPT 1.xxx bruges stadig, fordi værdien er binær.",
       },
       {
+        step: "Trin 3 · Tilbagemelding",
+        focus: "Visualisering skal vise faktisk status",
         text:
-          "Scenarie 3: Kunden klager over, at visualiseringen viser forkert tilstand efter manuel betjening. Du skal linke tilbagemelding fra relæets udgang 1. Hvad er mest korrekt?",
+          "Visualiseringen viser forkert tilstand, når lampen ændres manuelt. Du skal derfor linke tilbagemeldingen fra relæets udgang 1.",
+        path: ["Relæudgang ændrer tilstand", "Relæets statusobjekt sender", "Visualisering modtager status", "Skærmen viser faktisk tilstand"],
         facts: [
-          "Objektet på relæet hedder Status/Switch status.",
-          "Visualiseringen skal vise faktisk tilstand, ikke sende kommando.",
-          "Værdien er enten tændt eller slukket.",
+          "Status er ikke det samme som betjeningskommando.",
+          "Status bør komme fra aktuatoren, fordi den kender den faktiske udgang.",
+          "Status for tænd/sluk er stadig en 1-bit værdi.",
         ],
         ga: "4/1/1",
         dpt: "1",
         gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/3/1"],
         dptOptions: ["1", "3", "5", "9"],
         success:
-          "Korrekt. Status for udgang 1 ligger på 4/1/1 og er stadig en 1-bit værdi, fordi den fortæller tændt/slukket tilstand.",
+          "Korrekt. 4/1/1 er status for udgang 1. DPT 1.xxx passer, fordi status stadig kun fortæller tændt eller slukket.",
       },
       {
+        step: "Trin 4 · Dæmpning",
+        focus: "Langt tryk sender relativ dæmpning",
         text:
-          "Scenarie 4: En kollega har linket tænd/sluk korrekt, men lang tryk skal nu dæmpe lyset op og ned. Hvilken ekstra gruppeadresse og DPT skal bruges?",
+          "Kort tryk tænder/slukker allerede korrekt. Nu skal langt tryk dæmpe lyset op og ned med relativ dæmpning.",
+        path: ["Bruger holder trykket inde", "Trykkets dimmeobjekt sender", "Dæmper/gateway modtager relativ dæmpning", "Lysniveauet ændres trinvis"],
         facts: [
-          "Kort tryk tænder/slukker allerede på sin egen adresse.",
-          "Langt tryk skal sende relativ dæmpning.",
-          "Dæmpning må ikke blandes sammen med statusadressen.",
+          "Langt tryk bruger et andet objekt end kort tryk.",
+          "Relativ dæmpning er ikke 1-bit tænd/sluk.",
+          "Dæmpning bør have sin egen gruppeadresse.",
         ],
         ga: "4/2/1",
         dpt: "3",
         gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/2/2"],
         dptOptions: ["1", "3", "5", "9"],
         success:
-          "Korrekt. Relativ dæmpning bruger typisk DPT 3.xxx og bør ligge på en separat dæmpeadresse, her 4/2/1.",
+          "Korrekt. Relativ dæmpning ligger på 4/2/1 og bruger typisk DPT 3.xxx. Det skal ikke blandes med tænd/sluk eller status.",
       },
       {
+        step: "Trin 5 · Fællesfunktion",
+        focus: "Flere udgange lytter på samme kommando",
         text:
-          "Scenarie 5: Læreren vil have en fælles sluk-funktion for hele 4. sal. Flere relæudgange skal lytte på samme kommando. Hvad vælger du?",
+          "Læreren vil have en fælles sluk-funktion for hele 4. sal. Flere relæudgange skal reagere på samme kommando.",
+        path: ["Fælles sluk aktiveres", "Kommando sendes på fælles adresse", "Flere relæudgange lytter", "Hele området slukker"],
         facts: [
-          "Det er ikke en statusværdi.",
-          "Flere aktuatorobjekter kan linkes til samme gruppeadresse.",
-          "Kommandoen er stadig bare sluk/tænd som 1 bit.",
+          "Her er det meningen, at flere modtagere deler adresse.",
+          "Funktionen er en kommando, ikke en statusadresse.",
+          "Sluk/tænd er stadig 1 bit.",
         ],
         ga: "4/3/1",
         dpt: "1",
         gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/3/1"],
         dptOptions: ["1", "3", "5", "9"],
         success:
-          "Korrekt. En fælles sluk-funktion kan være en separat gruppeadresse, fx 4/3/1, som flere relæudgange lytter på. DPT 1.xxx passer til sluk/tænd.",
+          "Korrekt. 4/3/1 er en fælles kommandoadresse, som flere aktuatorobjekter kan lytte på. DPT 1.xxx passer til sluk/tænd.",
       },
     ];
     var gaLabels = {
@@ -1363,7 +1299,18 @@
       9: "DPT 9.xxx – 2 byte flydende værdi",
     };
 
-    if (!form || !gaSelect || !dptSelect || !result || !scenarioText || !scenarioFacts || !progress) return;
+    if (
+      !form ||
+      !gaSelect ||
+      !dptSelect ||
+      !result ||
+      !scenarioText ||
+      !scenarioFacts ||
+      !scenarioStep ||
+      !scenarioFocus ||
+      !signalPath ||
+      !progress
+    ) return;
 
     function setResult(kind, text) {
       result.classList.remove("is-good", "is-warn");
@@ -1373,8 +1320,16 @@
 
     function renderScenario() {
       var scenario = scenarios[scenarioIndex];
+      scenarioStep.textContent = scenario.step;
+      scenarioFocus.textContent = scenario.focus;
       scenarioText.textContent = scenario.text;
-      progress.textContent = scenarioIndex + 1 + " / " + scenarios.length;
+      progress.textContent = "Trin " + (scenarioIndex + 1) + " / " + scenarios.length;
+      signalPath.innerHTML = "";
+      scenario.path.forEach(function (step) {
+        var li = document.createElement("li");
+        li.textContent = step;
+        signalPath.appendChild(li);
+      });
       scenarioFacts.innerHTML = "";
       scenario.facts.forEach(function (fact) {
         var li = document.createElement("li");
@@ -1383,6 +1338,8 @@
       });
       renderOptions(gaSelect, scenario.gaOptions, "Vælg gruppeadresse", gaLabels);
       renderOptions(dptSelect, scenario.dptOptions, "Vælg DPT", dptLabels);
+      if (prevBtn) prevBtn.disabled = scenarioIndex === 0;
+      if (nextBtn) nextBtn.textContent = scenarioIndex === scenarios.length - 1 ? "Start forfra" : "Næste scenarie";
       setResult("", "");
     }
 
@@ -1417,6 +1374,14 @@
         return;
       }
 
+      if (ga === scenario.ga && dpt !== scenario.dpt) {
+        setResult(
+          "is-warn",
+          "Gruppeadressen passer til funktionen, men DPT'en passer ikke. Kig på værditypen: er det 1-bit tænd/sluk, relativ dæmpning eller en måleværdi?"
+        );
+        return;
+      }
+
       if (ga === "4/1/1" && scenario.ga !== "4/1/1") {
         setResult(
           "is-warn",
@@ -1428,24 +1393,39 @@
       if (ga === "4/2/1" || dpt === "3") {
         setResult(
           "is-warn",
-          "Du har valgt noget, der hører til dæmpning. Det er kun korrekt, når scenariet handler om at dæmpe lyset."
+          "Du har valgt noget, der hører til relativ dæmpning. Det er kun korrekt, når scenariet handler om langt tryk eller dæmpning op/ned."
         );
         return;
       }
 
-      if (dpt !== scenario.dpt) {
+      if (ga === "4/0/1" && scenario.ga === "4/0/2") {
         setResult(
           "is-warn",
-          "Gruppeadressen kan være tæt på, men datapunkttypen passer ikke til funktionen i scenariet."
+          "4/0/1 er allerede brugt til udgang 1. Når udgang 2 skal være uafhængig, skal den have sin egen tænd/sluk-adresse."
+        );
+        return;
+      }
+
+      if (ga !== scenario.ga && dpt === scenario.dpt) {
+        setResult(
+          "is-warn",
+          "DPT'en passer til værditypen, men gruppeadressen matcher ikke signalvejen. Følg afsender, funktion og modtager én gang mere."
         );
         return;
       }
 
       setResult(
         "is-warn",
-        "Ikke helt. Kig på om scenariet handler om udgang 1, udgang 2, status, dæmpning eller fælles sluk, og vælg den gruppeadresse der matcher funktionen."
+        "Ikke helt. Start med at spørge: er det kommando, status, dæmpning eller fællesfunktion? Vælg derefter adressen for netop den funktion."
       );
     });
+
+    if (prevBtn) {
+      prevBtn.addEventListener("click", function () {
+        scenarioIndex = Math.max(0, scenarioIndex - 1);
+        renderScenario();
+      });
+    }
 
     if (nextBtn) {
       nextBtn.addEventListener("click", function () {
@@ -1505,10 +1485,37 @@
     });
   }
 
+  function initQuickTests() {
+    document.querySelectorAll("[data-quick-test]").forEach(function (box) {
+      var buttons = box.querySelectorAll("button[data-correct]");
+      var feedback = box.querySelector(".quick-test__feedback");
+      if (!buttons.length || !feedback) return;
+
+      buttons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          var isCorrect = button.getAttribute("data-correct") === "true";
+          buttons.forEach(function (b) {
+            b.classList.remove("is-correct", "is-wrong", "is-selected");
+            b.setAttribute("aria-pressed", "false");
+          });
+
+          button.classList.add(isCorrect ? "is-correct" : "is-wrong", "is-selected");
+          button.setAttribute("aria-pressed", "true");
+          feedback.classList.add("is-visible");
+          feedback.classList.toggle("is-good", isCorrect);
+          feedback.classList.toggle("is-warn", !isCorrect);
+          feedback.textContent = (isCorrect ? "" : "Ikke helt. ") + feedback.dataset.answer;
+        });
+      });
+
+      feedback.dataset.answer = feedback.textContent.trim();
+      feedback.textContent = "";
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initTabs();
     initChecklists();
-    initRemoteChecklists();
     initSubtabsContainers();
     initFaultFinding();
     initDistanceChecker();
@@ -1518,5 +1525,6 @@
     initFlashcards();
     initEtsExercise();
     initDaliExercise();
+    initQuickTests();
   });
 })();
