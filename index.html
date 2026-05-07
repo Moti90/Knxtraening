@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Knx træning</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Spring til indhold</a>
+
+    <header class="site-header">
+      <div class="site-header__inner">
+        <div class="brand">
+          <div class="brand__logo" aria-hidden="true">
+            <svg class="brand__mark" viewBox="0 0 96 96" focusable="false">
+              <defs>
+                <linearGradient id="logo-core" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f8fafc" />
+                  <stop offset="100%" stop-color="#dcfce7" />
+                </linearGradient>
+              </defs>
+              <circle cx="48" cy="48" r="42" fill="url(#logo-core)" />
+              <circle cx="48" cy="48" r="41" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" />
+              <text x="48" y="55" text-anchor="middle" fill="#0f172a" font-family="system-ui, sans-serif" font-size="26" font-weight="900" letter-spacing="-0.5">KNX</text>
+              <path d="M18 70 H78" stroke="#009739" stroke-width="4" stroke-linecap="round" />
+              <path d="M26 70 V61" stroke="#009739" stroke-width="4" stroke-linecap="round" />
+              <path d="M48 70 V61" stroke="#009739" stroke-width="4" stroke-linecap="round" />
+              <path d="M70 70 V61" stroke="#009739" stroke-width="4" stroke-linecap="round" />
+              <circle cx="18" cy="70" r="4" fill="#0f172a" />
+              <circle cx="48" cy="70" r="4" fill="#0f172a" />
+              <circle cx="78" cy="70" r="4" fill="#0f172a" />
+              <path d="M21 23 H39" stroke="#0f172a" stroke-width="3" stroke-linecap="round" opacity="0.42" />
+              <path d="M57 23 H75" stroke="#009739" stroke-width="3" stroke-linecap="round" opacity="0.7" />
+              <text x="48" y="86" text-anchor="middle" fill="#0f172a" font-family="system-ui, sans-serif" font-size="10" font-weight="900" letter-spacing="1.1">ETS</text>
+            </svg>
+          </div>
+          <div class="brand__copy">
+            <h1 class="brand__title">Knx træning</h1>
+            <p class="brand__subtitle">Praktisk repetition, gruppeadresser og øvelser</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Hovedsektioner">
+      <button
+        type="button"
+        class="tabs__btn is-active"
+        role="tab"
+        aria-selected="true"
+        aria-controls="panel-home"
+        id="tab-home"
+        data-panel="home"
+      >
+        Forside
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-overview"
+        id="tab-overview"
+        data-panel="overview"
+      >
+        KNX &amp; ETS fakta
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-distances"
+        id="tab-distances"
+        data-panel="distances"
+      >
+        Afstande &amp; kabler
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-ets"
+        id="tab-ets"
+        data-panel="ets"
+      >
+        ETS træning
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-install"
+        id="tab-install"
+        data-panel="install"
+      >
+        Installation &amp; afprøvning
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-fault"
+        id="tab-fault"
+        data-panel="fault"
+      >
+        KNX/ETS fejl
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-ops"
+        id="tab-ops"
+        data-panel="ops"
+      >
+        Lys &amp; DALI
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        aria-selected="false"
+        aria-controls="panel-learn"
+        id="tab-learn"
+        data-panel="learn"
+      >
+        Quiz &amp; ord
+      </button>
+    </nav>
+
+    <main id="main" class="main">
+      <!-- Forside (interaktiv navigation) -->
+      <section
+        id="panel-home"
+        class="panel panel--home is-visible"
+        role="tabpanel"
+        aria-labelledby="tab-home"
+      >
+        <header class="home-hero">
+          <span class="home-hero__eyebrow">Praktisk KNX-træning</span>
+          <h2 class="home-hero__title">Vælg hvad du vil træne</h2>
+          <p class="home-hero__lead">
+            Brug siden som arbejdsredskab til KNX, ETS, gruppeadresser, installation,
+            fejlfinding og drift. Indholdet er lavet til repetition før praksis og skoleopgaver.
+          </p>
+        </header>
+
+        <div class="home-shell">
+          <div class="home-visual" aria-hidden="true">
+            <svg class="home-visual__svg" viewBox="0 0 760 520" focusable="false">
+              <defs>
+                <linearGradient id="home-bg-soft" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#ecfdf5" />
+                  <stop offset="62%" stop-color="#f8fafc" />
+                  <stop offset="100%" stop-color="#f5f5f4" />
+                </linearGradient>
+                <linearGradient id="home-glass" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#dff7ff" />
+                  <stop offset="100%" stop-color="#bff7df" />
+                </linearGradient>
+                <filter id="home-card-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="18" stdDeviation="18" flood-opacity="0.12" />
+                </filter>
+              </defs>
+
+              <rect width="760" height="520" rx="28" fill="url(#home-bg-soft)" />
+              <ellipse cx="380" cy="454" rx="300" ry="34" fill="#009739" opacity="0.08" />
+
+              <g filter="url(#home-card-shadow)">
+                <rect x="86" y="82" width="588" height="344" rx="22" fill="#ffffff" stroke="#d4d4d8" />
+                <rect x="112" y="112" width="146" height="284" rx="14" fill="#f4f4f5" stroke="#e4e4e7" />
+                <rect x="290" y="112" width="224" height="150" rx="14" fill="#fafafa" stroke="#e4e4e7" />
+                <rect x="540" y="112" width="108" height="150" rx="14" fill="#ecfdf5" stroke="#a7f3d0" />
+                <rect x="290" y="290" width="358" height="106" rx="14" fill="#fafafa" stroke="#e4e4e7" />
+              </g>
+
+              <g fill="url(#home-glass)" stroke="#a5f3fc" opacity="0.92">
+                <rect x="314" y="136" width="48" height="44" rx="6" />
+                <rect x="376" y="136" width="48" height="44" rx="6" />
+                <rect x="438" y="136" width="48" height="44" rx="6" />
+                <rect x="314" y="196" width="48" height="44" rx="6" />
+                <rect x="376" y="196" width="48" height="44" rx="6" />
+                <rect x="438" y="196" width="48" height="44" rx="6" />
+              </g>
+
+              <rect x="134" y="268" width="100" height="92" rx="8" fill="#3f3f46" opacity="0.92" />
+              <line x1="150" y1="290" x2="218" y2="290" stroke="#a1a1aa" stroke-width="5" stroke-linecap="round" />
+              <line x1="150" y1="312" x2="218" y2="312" stroke="#71717a" stroke-width="5" stroke-linecap="round" />
+              <line x1="150" y1="334" x2="218" y2="334" stroke="#a1a1aa" stroke-width="5" stroke-linecap="round" />
+
+              <rect x="558" y="138" width="72" height="10" rx="3" fill="#009739" opacity="0.35" />
+              <rect x="558" y="160" width="72" height="10" rx="3" fill="#009739" opacity="0.22" />
+              <rect x="558" y="182" width="54" height="10" rx="3" fill="#009739" opacity="0.28" />
+              <circle cx="594" cy="224" r="18" fill="#fef3c7" stroke="#fcd34d" stroke-width="2" />
+
+              <path
+                d="M138 384 C230 354 282 378 360 362 S520 348 622 374"
+                fill="none"
+                stroke="#009739"
+                stroke-width="5"
+                stroke-linecap="round"
+              />
+              <circle cx="180" cy="374" r="8" fill="#009739" />
+              <circle cx="380" cy="362" r="8" fill="#009739" />
+              <circle cx="594" cy="368" r="8" fill="#009739" />
+
+              <g fill="#009739">
+                <circle cx="184" cy="250" r="8" />
+                <circle cx="402" cy="276" r="8" />
+                <circle cx="594" cy="114" r="8" />
+              </g>
+            </svg>
+          </div>
+
+          <nav class="home-routes" aria-label="Vælg fagområde">
+            <button type="button" class="home-zone home-route" data-go-panel="overview">
+              <span class="home-route__icon" aria-hidden="true">01</span>
+              <span>
+                <span class="home-route__title">KNX &amp; ETS fakta</span>
+                <span class="home-route__desc">Begreber, telegrammer, objekter, flags og ETS-ord.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route" data-go-panel="distances">
+              <span class="home-route__icon" aria-hidden="true">02</span>
+              <span>
+                <span class="home-route__title">Afstande &amp; kabler</span>
+                <span class="home-route__desc">KNX TP-topologi, segmenter, afstande og tjek af grænser.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route home-route--featured" data-go-panel="ets">
+              <span class="home-route__icon" aria-hidden="true">03</span>
+              <span>
+                <span class="home-route__title">ETS træning</span>
+                <span class="home-route__desc">Projektopbygning, fysiske adresser, gruppeadresser og download.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route" data-go-panel="install">
+              <span class="home-route__icon" aria-hidden="true">04</span>
+              <span>
+                <span class="home-route__title">Installation</span>
+                <span class="home-route__desc">Checkliste til montage, programmering, test og overdragelse.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route" data-go-panel="fault">
+              <span class="home-route__icon" aria-hidden="true">05</span>
+              <span>
+                <span class="home-route__title">KNX/ETS fejl</span>
+                <span class="home-route__desc">Find fejl i gruppeadresser, DPT, download og bus.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route" data-go-panel="ops">
+              <span class="home-route__icon" aria-hidden="true">06</span>
+              <span>
+                <span class="home-route__title">Lys &amp; DALI</span>
+                <span class="home-route__desc">DALI-bus, gateway, grupper, scener og daglys.</span>
+              </span>
+            </button>
+            <button type="button" class="home-zone home-route" data-go-panel="learn">
+              <span class="home-route__icon" aria-hidden="true">07</span>
+              <span>
+                <span class="home-route__title">Quiz &amp; ord</span>
+                <span class="home-route__desc">Repeter begreber med quiz, flashcards og ordliste.</span>
+              </span>
+            </button>
+          </nav>
+        </div>
+      </section>
+
+      <!-- KNX & ETS fakta -->
+      <section
+        id="panel-overview"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-overview"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>KNX &amp; ETS fakta</h2>
+          <p>
+            Fakta og begreber, der er gode at have i baghovedet, uden at gentage ETS-øvelser,
+            afstandstabeller, driftssider eller installationstjeklister.
+          </p>
+        </div>
+
+        <section class="fact-hero card card--accent" aria-labelledby="fact-hero-title">
+          <div>
+            <p class="fact-hero__eyebrow">Kort sagt</p>
+            <h3 id="fact-hero-title">KNX er hændelsesstyret</h3>
+            <p>
+              Enheder står ikke og spørger hinanden hele tiden. De sender telegrammer, når noget sker:
+              et tryk aktiveres, en sensor måler en ændring, eller en aktuator melder status tilbage.
+            </p>
+          </div>
+          <div class="fact-telegram" aria-hidden="true">
+            <span>Tryk</span>
+            <strong>telegram</strong>
+            <span>Aktuator</span>
+          </div>
+        </section>
+
+        <h3 class="section-title">Begreber der ofte forveksles</h3>
+        <div class="facts-grid">
+          <article class="card fact-card">
+            <h3>Backbone</h3>
+            <p>
+              Backbone er den øverste buslinje i en større KNX-installation. Den forbinder områder
+              via områdekoblere og bruges som den fælles struktur, som resten af anlægget hænger på.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Område, hovedlinje og linje</h3>
+            <p>
+              Et KNX-netværk bygges hierarkisk: backbone øverst, derefter områder med hovedlinjer
+              og til sidst de almindelige linjer, hvor sensorer, aktuatorer og betjeningsenheder sidder.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Koblere</h3>
+            <p>
+              En områdekobler forbinder backbone med et område. En linjekobler forbinder en hovedlinje
+              med en underlinje og kan filtrere telegrammer, så kun relevant trafik sendes videre.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Linje og segment</h3>
+            <p>
+              En linje er en del af KNX-bussen med sin egen struktur og adresseområde. Et segment er
+              et fysisk stykke af linjen, fx mellem strømforsyning, linjekobler og linjeforstærker.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Individuel adresse</h3>
+            <p>
+              Identificerer enheden på bussen, fx <code>1.1.12</code>. Den bruges til download,
+              diagnose og programmering, men beskriver ikke selve funktionen.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Kommunikationsobjekt</h3>
+            <p>
+              Et objekt er en dataport i applikationen, fx “Switch”, “Status” eller “Dimming”.
+              Det er objekterne, der linkes til gruppeadresser.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Datapunkttype (DPT)</h3>
+            <p>
+              DPT fortæller, hvordan værdien skal forstås. <code>1.xxx</code> er typisk 1 bit,
+              <code>3.xxx</code> relativ dæmpning, og <code>9.xxx</code> måleværdier som temperatur.
+            </p>
+          </article>
+          <article class="card fact-card">
+            <h3>Flags i ETS</h3>
+            <p>
+              Flags som Communication, Read, Write, Transmit og Update bestemmer, hvordan objektet
+              må kommunikere. Forkerte flags kan give fejl, selv om adressen ser rigtig ud.
+            </p>
+          </article>
+        </div>
+
+        <h3 class="section-title">Telegrammets vej</h3>
+        <div class="fact-path">
+          <div class="fact-path__step">
+            <span>1</span>
+            <strong>Hændelse</strong>
+            <p>Bruger trykker, sensor registrerer eller logik ændrer værdi.</p>
+          </div>
+          <div class="fact-path__step">
+            <span>2</span>
+            <strong>Objekt sender</strong>
+            <p>Et kommunikationsobjekt sender et telegram med værdi og DPT.</p>
+          </div>
+          <div class="fact-path__step">
+            <span>3</span>
+            <strong>Bus distribuerer</strong>
+            <p>Telegrammet sendes til alle enheder, men kun relevante objekter reagerer.</p>
+          </div>
+          <div class="fact-path__step">
+            <span>4</span>
+            <strong>Aktuator reagerer</strong>
+            <p>Relæ, dæmper, ventil eller gateway udfører funktionen og kan sende status.</p>
+          </div>
+        </div>
+
+        <h3 class="section-title">Gode ting at vide i ETS</h3>
+        <div class="facts-list card">
+          <ul>
+            <li><strong>Produktdatabase:</strong> ETS viser kun de parametre og objekter, producentens applikation stiller til rådighed.</li>
+            <li><strong>Parametre før link:</strong> Mange objekter bliver først synlige, når funktionen er aktiveret i parametrene.</li>
+            <li><strong>Downloadtyper:</strong> Fysisk adresse og applikation kan downloades separat; ved ændringer i parametre kræves applikationsdownload.</li>
+            <li><strong>Projektfilen er vigtig:</strong> Uden korrekt ETS-projekt bliver fejlfinding og senere ændringer meget sværere.</li>
+            <li><strong>Monitorer:</strong> Group Monitor bruges til gruppekommunikation; Bus Monitor er mere rå og bruges typisk mere forsigtigt.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ETS træning -->
+      <section
+        id="panel-ets"
+        class="panel ets-page"
+        role="tabpanel"
+        aria-labelledby="tab-ets"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>ETS træning: fra projekt til funktion</h2>
+          <p>
+            Praktisk overblik over det, du typisk gør i ETS: opretter struktur, adresserer enheder,
+            laver gruppeadresser, linker kommunikationsobjekter og downloader til anlægget.
+          </p>
+        </div>
+
+        <div class="ets-flow" aria-label="ETS arbejdsgang">
+          <article class="ets-step card card--accent">
+            <span class="ets-step__num">1</span>
+            <h3>Opret projekt</h3>
+            <p>
+              Vælg KNX TP, navngiv projektet og opret bygning, etager, rum og tavler så projektet
+              matcher installationen.
+            </p>
+          </article>
+          <article class="ets-step card">
+            <span class="ets-step__num">2</span>
+            <h3>Indsæt produkter</h3>
+            <p>
+              Importér produktdatabase fra producenten, og placer tryk, sensorer, aktuatorer,
+              strømforsyning og gateways i den rigtige struktur.
+            </p>
+          </article>
+          <article class="ets-step card">
+            <span class="ets-step__num">3</span>
+            <h3>Giv fysisk adresse</h3>
+            <p>
+              Brug fx <strong>1.1.12</strong>: område 1, linje 1, enhed 12. Adressen identificerer
+              enheden på bussen og bruges ved programmering/diagnose.
+            </p>
+          </article>
+          <article class="ets-step card">
+            <span class="ets-step__num">4</span>
+            <h3>Lav gruppeadresser</h3>
+            <p>
+              Gruppeadresser fungerer som elektroniske samlemuffer: flere kommunikationsobjekter
+              mødes på samme adresse, så de kan sende og modtage samme funktion.
+            </p>
+          </article>
+          <article class="ets-step card">
+            <span class="ets-step__num">5</span>
+            <h3>Link objekter</h3>
+            <p>
+              Forbind trykkets sendeobjekt med aktuatorens modtageobjekt på samme gruppeadresse.
+              Datapunkttypen skal passe til funktionen.
+            </p>
+          </article>
+          <article class="ets-step card">
+            <span class="ets-step__num">6</span>
+            <h3>Download og test</h3>
+            <p>
+              Download fysisk adresse og applikation, test funktionen i rummet, og kontrollér
+              status/telegrammer hvis noget ikke virker.
+            </p>
+          </article>
+        </div>
+
+        <h3 class="section-title">Gruppeadresser i praksis</h3>
+        <section class="ets-ga-visual card" aria-labelledby="ets-ga-visual-title">
+          <div class="ets-ga-visual__intro">
+            <p class="ets-exercise__eyebrow">3-niveau gruppeadresse</p>
+            <h3 id="ets-ga-visual-title">Sådan kan <code>4/0/1</code> bygges op i ETS</h3>
+            <p>
+              I undervisningen beskrives gruppeadresser som tre niveauer:
+              <strong>Hovedgruppe</strong>, <strong>Mellemgruppe</strong> og
+              <strong>Gruppeadresse</strong>. Navnene skal give mening for den næste, der overtager projektet.
+            </p>
+          </div>
+
+          <div class="ets-ga-breakdown" aria-label="Gruppeadresse 4/0/1 opdelt i tre niveauer">
+            <div class="ets-ga-part ets-ga-part--main">
+              <span class="ets-ga-part__label">Hovedgruppe</span>
+              <strong class="ets-ga-part__value">4</strong>
+              <span class="ets-ga-part__hint">4. sal</span>
+            </div>
+            <span class="ets-ga-slash" aria-hidden="true">/</span>
+            <div class="ets-ga-part ets-ga-part--middle">
+              <span class="ets-ga-part__label">Mellemgruppe</span>
+              <strong class="ets-ga-part__value">0</strong>
+              <span class="ets-ga-part__hint">4. Sal – Lys – Relæ tændinger</span>
+            </div>
+            <span class="ets-ga-slash" aria-hidden="true">/</span>
+            <div class="ets-ga-part ets-ga-part--sub">
+              <span class="ets-ga-part__label">Gruppeadresse</span>
+              <strong class="ets-ga-part__value">1</strong>
+              <span class="ets-ga-part__hint">4. Sal – Lok. 406A/B – Tænd/sluk udgang 1</span>
+            </div>
+          </div>
+
+          <div class="ets-ga-caption">
+            <strong>Eksempel:</strong> <code>4/0/1</code> kan læses som
+            <em>4. sal → lys/relæ-tændinger → lokale 406A/B tænd/sluk udgang 1</em>. ETS giver mulighed for
+            32 hovedgrupper, 8 mellemgrupper og 256 gruppeadresser. <code>0/0/0</code> er reserveret,
+            så der er 65.535 brugbare gruppeadresser.
+          </div>
+        </section>
+
+        <div class="ets-address-grid">
+          <article class="card">
+            <h3>3-niveau struktur</h3>
+            <dl class="ets-address-list">
+              <div>
+                <dt>4/0/1</dt>
+                <dd>4. Sal – Lok. 406A/B – Tænd/sluk udgang 1</dd>
+              </div>
+              <div>
+                <dt>4/0/2</dt>
+                <dd>4. Sal – Lok. 406A/B – Tænd/sluk udgang 2</dd>
+              </div>
+              <div>
+                <dt>4/1/1</dt>
+                <dd>4. Sal – Lys – Status udgang 1</dd>
+              </div>
+              <div>
+                <dt>4/2/1</dt>
+                <dd>4. Sal – Lys – Dæmpning lok. 406A/B</dd>
+              </div>
+              <div>
+                <dt>4/2/2</dt>
+                <dd>4. Sal – Lys – Dæmpeværdi lok. 406A/B</dd>
+              </div>
+              <div>
+                <dt>4/3/1</dt>
+                <dd>4. Sal – Lys – Fælles sluk</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="card">
+            <h3>Huskeregel</h3>
+            <ul class="ets-checks">
+              <li><strong>Fysisk adresse</strong> er enhedens adresse, fx <code>1.1.12</code>.</li>
+              <li><strong>Gruppeadresse</strong> er funktionens adresse, fx <code>4/0/1</code>.</li>
+              <li><strong>Navngivning</strong> bør vise placering og funktion, fx <em>4. Sal – Lok. 406A/B – Tænd/sluk udgang 1</em>.</li>
+              <li><strong>DPT</strong> skal passe: tænd/sluk bruger typisk <code>1.xxx</code>.</li>
+              <li><strong>Status</strong> bør ofte have sin egen gruppeadresse, så visualisering kan se faktisk tilstand.</li>
+            </ul>
+          </article>
+        </div>
+
+        <section class="ets-exercise card" aria-labelledby="ets-exercise-title">
+          <div class="ets-exercise__header">
+            <div>
+              <p class="ets-exercise__eyebrow">Scenarietræning</p>
+              <h3 id="ets-exercise-title">Vælg gruppeadresse og DPT</h3>
+            </div>
+            <span class="ets-exercise__tag" id="ets-exercise-progress">1 / 4</span>
+          </div>
+
+          <p id="ets-scenario-text">
+            Scenarie: Det venstre tryk skal tænde/slukke udgang 1 på Hager-relæet i lokale 406A/B.
+            Hvilken gruppeadresse og datapunkttype passer bedst?
+          </p>
+          <ul class="ets-scenario-facts" id="ets-scenario-facts"></ul>
+
+          <form class="ets-exercise__form" id="ets-exercise-form">
+            <label>
+              Gruppeadresse
+              <select id="ets-ga-select">
+                <option value="">Vælg gruppeadresse</option>
+              </select>
+            </label>
+
+            <label>
+              Datapunkttype
+              <select id="ets-dpt-select">
+                <option value="">Vælg DPT</option>
+              </select>
+            </label>
+
+            <div class="toolbar">
+              <button type="submit" class="btn">Tjek svar</button>
+              <button type="button" class="btn btn--ghost" id="ets-next-scenario">Næste scenarie</button>
+              <button type="reset" class="btn btn--ghost">Nulstil</button>
+            </div>
+          </form>
+
+          <div class="ets-exercise__result" id="ets-exercise-result" role="status" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <!-- KNX TP afstande -->
+      <section
+        id="panel-distances"
+        class="panel dist-page"
+        role="tabpanel"
+        aria-labelledby="tab-distances"
+        hidden
+      >
+        <div class="panel__intro dist-page__intro">
+          <h2>KNX TP – afstande og topologi</h2>
+          <p>
+            Typiske grænser for twisted-pair (busledning), som I bruger på TEC. Tal kan afvige efter
+            <strong>medietype og producent</strong> – brug altid datablad og jeres installationsgrundlag.
+          </p>
+        </div>
+
+        <div class="callout callout--warn dist-callout">
+          <strong>OBS.</strong>
+          <span class="dist-callout__body">
+            Træningsnotat. Den konkrete PSU, kabel og linjetype (fx med eller uden repeater)
+            kan ændre grænserne.
+          </span>
+        </div>
+
+        <section class="dist-section" aria-labelledby="dist-heading-abbr">
+          <h3 id="dist-heading-abbr" class="dist-section__title">Begreber på diagrammet</h3>
+          <p class="dist-section__lead">
+            Én betydning pr. linje – scroll roligt ned mellem sektionerne.
+          </p>
+          <dl class="abbr-list abbr-list--relaxed">
+            <div>
+              <dt>OK</dt>
+              <dd>Områdekobler – binder backbone til et områdes hovedlinje.</dd>
+            </div>
+            <div>
+              <dt>LK</dt>
+              <dd>Linjekobler – binder hovedlinje til en underlinje.</dd>
+            </div>
+            <div>
+              <dt>LF</dt>
+              <dd>
+                Linjeforstærker – en <strong>bus-enhed</strong> med egen fysisk adresse, der forstærker
+                telegrammer og opdeler linjen i segmenter (ofte op til 64 enheder pr. segment).
+              </dd>
+            </div>
+            <div>
+              <dt>PSU</dt>
+              <dd>Strømforsyning til bussen (30&nbsp;V&nbsp;DC).</dd>
+            </div>
+            <div>
+              <dt>DVC</dt>
+              <dd>
+                Enhed på linjen – i diagrammer bruges „device“ bredt (sensorer, aktuatorer …).
+              </dd>
+            </div>
+          </dl>
+
+          <div class="dist-aside dist-aside--compare" aria-labelledby="dist-heading-lf-vs-act">
+            <h4 id="dist-heading-lf-vs-act" class="dist-aside__title">
+              Forskellen mellem linjeforstærker og fx en 6-kanels aktuator
+            </h4>
+            <ul class="dist-compare-list">
+              <li>
+                <strong>Linjeforstærker (LF)</strong> er først og fremmest til <strong>bus/topologi</strong>:
+                den genskaber eller udvider bus-signalet og hjælper med segmentering og længde.
+                Du programmerer den ikke til at tænde seks lamper med gruppeadresser på samme måde som en aktuator.
+              </li>
+              <li>
+                <strong>En 6-kanels aktuator</strong> er en <strong>funktionsenhed</strong>: du har typisk seks
+                udgange/kanaler, der knyttes til <strong>gruppeobjekter</strong>, så lys, rulgardin eller lignende
+                kan styres fra panelet eller scenarie.
+              </li>
+              <li>
+                <strong>Fælles punkt:</strong> begge har <strong>fysisk bus-adresse</strong>, tilsluttes TP‑linjen
+                og tæller med i segment-/programmeringsarbejdet – men rollen er forskellig: LF er „infrastruktur på
+                linen“, aktuatoren er „det der laver noget i installationen“.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="dist-section" aria-labelledby="dist-heading-rules">
+          <h3 id="dist-heading-rules" class="dist-section__title">Afstande på TP (typiske tal)</h3>
+          <p class="dist-section__lead">
+            Hver regel står for sig. De to regler med <strong>700&nbsp;m</strong> gælder forskellige
+            målepunkter – læs overskriften og „mellem hvem“.
+          </p>
+
+          <ul class="rule-stack">
+            <li class="rule-card">
+              <span class="rule-card__badge">Segment</span>
+              <span class="rule-card__limit">≤ 1000&nbsp;m</span>
+              <h4 class="rule-card__title">Samlet busledning i ét segment</h4>
+              <p class="rule-card__text">
+                Alt KNX TP-kabel lagt sammen på samme segment må typisk ikke overstige 1000&nbsp;m.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge">PSU → enhed</span>
+              <span class="rule-card__limit">≤ 350&nbsp;m</span>
+              <h4 class="rule-card__title">Fra strømforsyning til fjerneste enhed</h4>
+              <p class="rule-card__text">
+                Den længeste vej langs bussen fra den relevante PSU til den enhed, der ligger længst væk.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge rule-card__badge--pair">700&nbsp;m · mellem enheder</span>
+              <span class="rule-card__limit">≤ 700&nbsp;m</span>
+              <h4 class="rule-card__title">To vilkårlige enheder på samme segment</h4>
+              <p class="rule-card__text">
+                Den største afstand målt langs bussen mellem to DVC – ikke det samme som LK→LF-reglen.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge rule-card__badge--pair-alt">700&nbsp;m · LK til LF</span>
+              <span class="rule-card__limit">≤ 700&nbsp;m</span>
+              <h4 class="rule-card__title">Linjekobler til første linjeforstærker</h4>
+              <p class="rule-card__text">
+                Gælder strækket fra LK til den første LF på den pågældende parallelgren – som på jeres tegning.
+              </p>
+            </li>
+            <li class="rule-card rule-card--special">
+              <span class="rule-card__badge rule-card__badge--prod">Producent · to PSU</span>
+              <span class="rule-card__limit rule-card__limit--soft">≥ typ. 200&nbsp;m</span>
+              <h4 class="rule-card__title">Mellem to strømforsyninger på samme linje</h4>
+              <p class="rule-card__text">
+                Kræver minimumsafstand <strong>efter producent</strong> (undervisning: ofte „mindst ca.
+                200&nbsp;m“). Uden korrekt afstand kan forsyningerne påvirke hinanden.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section class="dist-section" aria-labelledby="dist-heading-lf">
+          <h3 id="dist-heading-lf" class="dist-section__title">Linjeforstærkere</h3>
+          <div class="dist-aside">
+            <p>
+              Flere LF på samme linje skal typisk <strong>parallelkobles til linjekobleren</strong>, så de
+              alle har direkte forbindelse til LK – ikke kun serielt LF → LF som eneste kæde.
+            </p>
+          </div>
+        </section>
+
+        <section class="dist-section" aria-labelledby="dist-heading-emc">
+          <h3 id="dist-heading-emc" class="dist-section__title">KNX og 230&nbsp;V i samme installation</h3>
+          <div class="dist-aside dist-aside--emc">
+            <p>
+              Ved <strong>blotlagte enkelte ledere</strong>: typisk mindst <strong>4&nbsp;mm afstand</strong>
+              mellem KNX-leder og 230&nbsp;V-leder – eller samme isolationsklasse. Har det ene kabel fuld
+              ydre kappe, gælder andre scenarier (se jeres figur om installation af kabler).
+            </p>
+          </div>
+        </section>
+
+        <section class="dist-section dist-section--last" aria-labelledby="dist-heading-check">
+          <h3 id="dist-heading-check" class="dist-section__title">Øvelse: tjek dine målte længder</h3>
+          <p class="dist-section__lead">
+            Udfyld kun de felter, du har målt. Tryk „Tjek tal“ – ét felt ad gangen er helt fint.
+          </p>
+          <form class="distance-check" id="distance-check-form" novalidate>
+            <div class="distance-check__stack">
+              <label class="distance-field">
+                <span class="distance-field__label">Samlet længde i ét segment</span>
+                <span class="distance-field__meta">meter · maks. 1000&nbsp;m</span>
+                <input type="number" id="dist-segment" min="0" step="1" placeholder="fx 850" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label">Længste stræk: PSU → enhed</span>
+                <span class="distance-field__meta">meter · maks. 350&nbsp;m</span>
+                <input type="number" id="dist-psu-dev" min="0" step="1" placeholder="fx 120" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label">Længste stræk: enhed ↔ enhed</span>
+                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
+                <input type="number" id="dist-dev-dev" min="0" step="1" placeholder="fx 400" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label">Linjekobler → første LF</span>
+                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
+                <input type="number" id="dist-lk-lf" min="0" step="1" placeholder="fx 200" inputmode="decimal" />
+              </label>
+              <label class="distance-field distance-field--optional">
+                <span class="distance-field__label">Afstand mellem to PSU</span>
+                <span class="distance-field__meta">valgfrit · typisk mindst ~200&nbsp;m (fabrikant)</span>
+                <input type="number" id="dist-psu-psu" min="0" step="1" placeholder="tom hvis kun én PSU" inputmode="decimal" />
+              </label>
+            </div>
+            <div class="distance-check__actions">
+              <button type="submit" class="btn">Tjek tal</button>
+              <button type="reset" class="btn btn--ghost" id="distance-check-reset">Ryd felter</button>
+            </div>
+            <div class="distance-results" id="distance-results" role="status" aria-live="polite"></div>
+          </form>
+        </section>
+      </section>
+
+      <!-- Installation -->
+      <section
+        id="panel-install"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-install"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>Checkliste: installation og afprøvning</h2>
+          <p>
+            Skabelon til dokumentation og kvalitetssikring – afkryds undervejs
+            (gemmes lokalt i din browser).
+          </p>
+        </div>
+
+        <ol class="wizard-steps">
+          <li class="wizard-steps__item">
+            <h3>Forberedelse</h3>
+            <ul class="checklist" data-checklist="prep"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Montage og tilslutning</h3>
+            <ul class="checklist" data-checklist="mount"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Konfiguration og programmering</h3>
+            <ul class="checklist" data-checklist="config"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Afprøvning og måling</h3>
+            <ul class="checklist" data-checklist="test"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Overdragelse</h3>
+            <ul class="checklist" data-checklist="handover"></ul>
+          </li>
+        </ol>
+
+        <div class="toolbar">
+          <button type="button" class="btn btn--ghost" id="btn-checklist-reset">
+            Nulstil afkrydsninger
+          </button>
+        </div>
+      </section>
+
+      <!-- KNX/ETS fejlfinding -->
+      <section
+        id="panel-fault"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-fault"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>KNX/ETS fejlfinding</h2>
+          <p>
+            Klik dig igennem typiske ETS- og KNX-fejl: forkert gruppeadresse, forkert DPT,
+            manglende download, status der ikke vises eller problemer på buslinjen.
+          </p>
+        </div>
+
+        <div class="fault-shell card">
+          <p class="fault-shell__meta" id="fault-step-label" aria-live="polite"></p>
+          <h3 class="fault-shell__title" id="fault-title"></h3>
+          <p class="fault-shell__body" id="fault-body"></p>
+          <div class="fault-choices" id="fault-choices"></div>
+          <div class="toolbar">
+            <button type="button" class="btn btn--ghost" id="fault-restart">
+              Start forfra
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lys & DALI -->
+      <section
+        id="panel-ops"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-ops"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>Lysstyring med DALI og KNX</h2>
+          <p>
+            Praktisk side om hvordan KNX kan styre lys via DALI: bus, gateway, grupper,
+            scener, fejlpunkter og daglysregulering.
+          </p>
+        </div>
+
+        <div class="subtabs-container" data-subtabs="ops">
+          <div class="subtabs" aria-label="Undersektion lys og DALI">
+            <button
+              type="button"
+              class="subtabs__btn is-active"
+              data-sub="regulation"
+              aria-pressed="true"
+            >
+              DALI &amp; daglys
+            </button>
+            <button type="button" class="subtabs__btn" data-sub="gateway" aria-pressed="false">
+              KNX-DALI gateway
+            </button>
+            <button type="button" class="subtabs__btn" data-sub="lighting-practice" aria-pressed="false">
+              Øvelser &amp; typiske fejl
+            </button>
+          </div>
+
+          <div id="sub-regulation" class="subpanel is-visible">
+            <div class="panel__intro panel__intro--tight">
+              <p>
+                Kort oversigt til undervisning – følg altid leverandørmanual og projekt for den konkrete
+                installation (KNX‑gateway, DALI‑bus, armaturtyper).
+              </p>
+            </div>
+
+            <article class="card card--accent dali-block">
+              <h3 class="section-title dali-block__title">DALI</h3>
+              <p>
+                <strong>DALI</strong> (Digital Addressable Lighting Interface) er en digital standard til
+                styring af belysning: dimring, grupper, scenarier og fejlstatus ud til armaturdrivere og
+                sensorer – adskilt fra den kraftige 230&nbsp;V‑forsyning.
+              </p>
+              <ul>
+                <li>Én bus kan typisk forsyne deltagere med signal og ofte også lav effekt til elektronik.</li>
+                <li>Adressering og grupper lægges ved idriftsættelse – dokumentér hvad der er programmeret.</li>
+                <li>I bygningsautomatik kobles DALI ofte til fx KNX via en <strong>gateway</strong>, så lys og
+                  andre funktioner kan samordnes.</li>
+              </ul>
+            </article>
+
+            <article class="card dali-block">
+              <h3 class="section-title dali-block__title">DALI‑2</h3>
+              <p>
+                <strong>DALI‑2</strong> er den udvidede generation under IEC&nbsp;62386. Den er tænkt til bedre
+                <strong>gensidig drift</strong> mellem produkter fra forskellige leverandører (certificering),
+                flere enhedstyper og udvidet funktionalitet – stadig med bagudkompatibilitet til klassisk DALI,
+                hvor det er understøttet.
+              </p>
+              <div class="table-wrap dali-table-wrap">
+                <table class="word-table">
+                  <thead>
+                    <tr>
+                      <th>Emne</th>
+                      <th>DALI (klassisk)</th>
+                      <th>DALI‑2</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Standard / interoperabilitet</td>
+                      <td>Ofte én master pr. bus; begrænset udvalg af inputs</td>
+                      <td>Multi‑master muligt; certificerede enheder efter IEC&nbsp;62386</td>
+                    </tr>
+                    <tr>
+                      <td>Enheder</td>
+                      <td>Primært drivere og basale input</td>
+                      <td>Også fx knapper, sensorer m.m. som separate bus‑profiler</td>
+                    </tr>
+                    <tr>
+                      <td>Projektering</td>
+                      <td>Kendte begrænsninger pr. fabrikat</td>
+                      <td>Mere ensartet datamodel – stadig læs datablad</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="card dali-block">
+              <h3 class="section-title dali-block__title">Daglysregulering</h3>
+              <p>
+                <strong>Daglysregulering</strong> betyder typisk, at kunstlys dimmes op/ned efter hvor meget
+                dagslys der allerede er i zonen – målt med en <strong>lux‑ eller fotosensor</strong>, og styret
+                mod et <strong>ønsket lysniveau</strong> på arbejdsplane (eller tilsvarende referencepunkt).
+              </p>
+              <ul>
+                <li>
+                  <strong>Konstant lys (maintained illuminance):</strong> regulering så den samlede belysning
+                  (dag + kunst) holder sig omkring et setpunkt – ikke nødvendigvis fuld effekt midt på dagen.
+                </li>
+                <li>
+                  <strong>Koordinering:</strong> samspil med solafskærmning, lameller eller gardiner kan reducere
+                  blending og spare energi – kræver afstemt logik i systemet.
+                </li>
+                <li>
+                  <strong>Manual override:</strong> brugerbetjening må kunne overstyre efter behov; drift skal
+                  kunne genskabe automatikkens lovlige tilstand (fabrikant/projekt).
+                </li>
+                <li>
+                  <strong>Tuning:</strong> sensorplacering, måleretning og kalibrering har stor betydning for komfort
+                  og stabilitet – lav målinger og justér parametre i dokumenteret rækkefølge.
+                </li>
+              </ul>
+              <div class="dist-aside dali-tip">
+                <p class="dali-tip__text">
+                  <strong class="dali-tip__lead">Tip til modulet:</strong> Forbind DALI/DALI‑2 og daglys til
+                  jeres mål om regulering og energioptimering – og til grafiske brugerflader hvor lyszoner vises og
+                  evt. fejl meldes tilbage til drift.
+                </p>
+              </div>
+            </article>
+
+            <article class="card dali-block daylight-demo-card">
+              <h3 class="section-title dali-block__title">Illustration: daglys og tre lamper</h3>
+              <p class="daylight-demo__lead">
+                Slideren simulerer <strong>udelys</strong>. <strong>Kun vindueszonen</strong> er på denne
+                daglysregulering: jo mere udelys, jo mere <strong>dæmpes kunstlyset</strong> (svagere glød). De to
+                andre lamper er <strong>andre zoner</strong> og forbliver næsten uændret – som når sensoren ikke
+                styrer dem på samme måde.
+              </p>
+              <div class="daylight-demo">
+                <div class="daylight-demo__controls">
+                  <label class="daylight-demo__label" for="daylight-slider">Udelys</label>
+                  <div class="daylight-demo__slider-row">
+                    <span class="daylight-demo__edge" aria-hidden="true">Mørkt</span>
+                    <input
+                      type="range"
+                      id="daylight-slider"
+                      min="0"
+                      max="100"
+                      value="30"
+                      aria-valuetext="30 procent udelys"
+                    />
+                    <span class="daylight-demo__edge" aria-hidden="true">Lyst</span>
+                  </div>
+                  <p class="daylight-demo__value" id="daylight-value" aria-live="polite"></p>
+                </div>
+
+                <figure class="daylight-demo__figure">
+                  <div class="daylight-room" id="daylight-room" role="img" aria-label="Rum med vindue og tre lamper">
+                  <div class="daylight-room__window" aria-hidden="true">
+                    <span class="daylight-room__window-label">Vindue</span>
+                  </div>
+                  <div class="daylight-room__beam" id="daylight-beam" aria-hidden="true"></div>
+                  <div class="daylight-lamps">
+                    <div class="daylight-lamp daylight-lamp--regulated" id="daylight-lamp-a">
+                      <div class="daylight-lamp__row">
+                        <div class="daylight-lamp__fixture">
+                          <div class="daylight-lamp__housing">
+                            <svg
+                              class="daylight-lamp__svg"
+                              viewBox="0 0 56 78"
+                              width="52"
+                              height="72"
+                              aria-hidden="true"
+                              focusable="false"
+                            >
+                              <rect x="19" y="0" width="18" height="7" rx="2" fill="#44403c" />
+                              <rect x="22" y="2" width="12" height="3" rx="0.5" fill="#57534e" />
+                              <path
+                                d="M28 7 L28 20"
+                                stroke="#a8a29e"
+                                stroke-width="2.25"
+                                stroke-linecap="round"
+                              />
+                              <path
+                                d="M12 20 H44 L40 24 L36 40 Q28 46 20 40 L16 24 Z"
+                                fill="#78716c"
+                                stroke="#57534e"
+                                stroke-width="0.75"
+                              />
+                              <ellipse cx="28" cy="23.5" rx="14" ry="3" fill="#a8a29e" opacity="0.85" />
+                              <ellipse class="daylight-lamp__halo" cx="28" cy="36" rx="17" ry="12" />
+                              <ellipse class="daylight-lamp__emitter" cx="28" cy="36" rx="11.5" ry="8.5" />
+                            </svg>
+                          </div>
+                        </div>
+                        <span
+                          class="daylight-lamp__meter"
+                          id="daylight-lamp-a-meter"
+                          title="Simuleret kunstlys-niveau for zonen"
+                        ></span>
+                      </div>
+                      <span class="daylight-lamp__cap">Vindueszone · daglysreg.</span>
+                    </div>
+                    <div class="daylight-lamp" id="daylight-lamp-b">
+                      <div class="daylight-lamp__row">
+                        <div class="daylight-lamp__fixture">
+                          <div class="daylight-lamp__housing">
+                            <svg
+                              class="daylight-lamp__svg"
+                              viewBox="0 0 56 78"
+                              width="52"
+                              height="72"
+                              aria-hidden="true"
+                              focusable="false"
+                            >
+                              <rect x="19" y="0" width="18" height="7" rx="2" fill="#44403c" />
+                              <rect x="22" y="2" width="12" height="3" rx="0.5" fill="#57534e" />
+                              <path
+                                d="M28 7 L28 20"
+                                stroke="#a8a29e"
+                                stroke-width="2.25"
+                                stroke-linecap="round"
+                              />
+                              <path
+                                d="M12 20 H44 L40 24 L36 40 Q28 46 20 40 L16 24 Z"
+                                fill="#78716c"
+                                stroke="#57534e"
+                                stroke-width="0.75"
+                              />
+                              <ellipse cx="28" cy="23.5" rx="14" ry="3" fill="#a8a29e" opacity="0.85" />
+                              <ellipse class="daylight-lamp__halo" cx="28" cy="36" rx="17" ry="12" />
+                              <ellipse class="daylight-lamp__emitter" cx="28" cy="36" rx="11.5" ry="8.5" />
+                            </svg>
+                          </div>
+                        </div>
+                        <span
+                          class="daylight-lamp__meter"
+                          id="daylight-lamp-b-meter"
+                          title="Simuleret kunstlys-niveau for zonen"
+                        ></span>
+                      </div>
+                      <span class="daylight-lamp__cap">Midt · anden zone</span>
+                    </div>
+                    <div class="daylight-lamp" id="daylight-lamp-c">
+                      <div class="daylight-lamp__row">
+                        <div class="daylight-lamp__fixture">
+                          <div class="daylight-lamp__housing">
+                            <svg
+                              class="daylight-lamp__svg"
+                              viewBox="0 0 56 78"
+                              width="52"
+                              height="72"
+                              aria-hidden="true"
+                              focusable="false"
+                            >
+                              <rect x="19" y="0" width="18" height="7" rx="2" fill="#44403c" />
+                              <rect x="22" y="2" width="12" height="3" rx="0.5" fill="#57534e" />
+                              <path
+                                d="M28 7 L28 20"
+                                stroke="#a8a29e"
+                                stroke-width="2.25"
+                                stroke-linecap="round"
+                              />
+                              <path
+                                d="M12 20 H44 L40 24 L36 40 Q28 46 20 40 L16 24 Z"
+                                fill="#78716c"
+                                stroke="#57534e"
+                                stroke-width="0.75"
+                              />
+                              <ellipse cx="28" cy="23.5" rx="14" ry="3" fill="#a8a29e" opacity="0.85" />
+                              <ellipse class="daylight-lamp__halo" cx="28" cy="36" rx="17" ry="12" />
+                              <ellipse class="daylight-lamp__emitter" cx="28" cy="36" rx="11.5" ry="8.5" />
+                            </svg>
+                          </div>
+                        </div>
+                        <span
+                          class="daylight-lamp__meter"
+                          id="daylight-lamp-c-meter"
+                          title="Simuleret kunstlys-niveau for zonen"
+                        ></span>
+                      </div>
+                      <span class="daylight-lamp__cap">Længere inde · anden zone</span>
+                    </div>
+                  </div>
+                </div>
+                  <figcaption class="daylight-demo__caption">
+                    Procentniveauer og lysudtryk i illustrationen er udelukkende til visuel kontekst og er ikke
+                    målinger eller driftsspecifikke grænser.
+                  </figcaption>
+                </figure>
+
+                <ul class="daylight-demo__legend">
+                  <li><span class="daylight-demo__swatch daylight-demo__swatch--warm"></span> Lys / halo og tallet ved siden af = simuleret kunstlys (%)</li>
+                  <li><span class="daylight-demo__swatch daylight-demo__swatch--dim"></span> Vindueszonen dæmpes tydeligt op mod fuldt udelys</li>
+                </ul>
+              </div>
+            </article>
+          </div>
+
+          <div id="sub-gateway" class="subpanel" hidden>
+            <div class="panel__intro panel__intro--tight">
+              <p>
+                En KNX-DALI gateway er broen mellem KNX-gruppeadresser og DALI-armaturer.
+                KNX bestemmer typisk funktionen; DALI udfører lysstyringen på armaturerne.
+              </p>
+            </div>
+
+            <article class="card card--accent dali-block">
+              <h3 class="section-title dali-block__title">Fra tryk til lys</h3>
+              <div class="dali-flow" aria-label="KNX til DALI signalvej">
+                <div class="dali-flow__node">
+                  <span>1</span>
+                  <strong>KNX-tryk</strong>
+                  <p>Sender telegram på fx <code>4/0/1</code>.</p>
+                </div>
+                <div class="dali-flow__arrow" aria-hidden="true">→</div>
+                <div class="dali-flow__node">
+                  <span>2</span>
+                  <strong>KNX-DALI gateway</strong>
+                  <p>Oversætter KNX-funktion til DALI-gruppe, scene eller adresse.</p>
+                </div>
+                <div class="dali-flow__arrow" aria-hidden="true">→</div>
+                <div class="dali-flow__node">
+                  <span>3</span>
+                  <strong>DALI-bus</strong>
+                  <p>Sender kommando til driverne på DALI-linjen.</p>
+                </div>
+                <div class="dali-flow__arrow" aria-hidden="true">→</div>
+                <div class="dali-flow__node">
+                  <span>4</span>
+                  <strong>Armatur</strong>
+                  <p>Tænder, slukker, dæmper eller kalder scene.</p>
+                </div>
+              </div>
+            </article>
+
+            <div class="grid-2">
+              <article class="card">
+                <h3>Det du typisk sætter op</h3>
+                <ul>
+                  <li>DALI-linje og fundne drivere/armaturer.</li>
+                  <li>Hvilke armaturer der hører til hvilke DALI-grupper.</li>
+                  <li>KNX-gruppeadresser til tænd/sluk, dæmp, værdi, status og scener.</li>
+                  <li>Om gatewayen skal sende fejlstatus tilbage til KNX.</li>
+                </ul>
+              </article>
+              <article class="card">
+                <h3>Nyttige tal at kende</h3>
+                <ul>
+                  <li>En DALI-linje har typisk op til <strong>64 drivere/control gear</strong>.</li>
+                  <li>Der kan typisk bruges <strong>16 DALI-grupper</strong>.</li>
+                  <li>DALI understøtter typisk <strong>16 scener</strong>.</li>
+                  <li>Præcise grænser afhænger af gateway, strømforsyning og produktmanual.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+
+          <div id="sub-lighting-practice" class="subpanel" hidden>
+            <div class="panel__intro panel__intro--tight">
+              <p>
+                Brug denne del som huskeliste, når du skal forstå eller teste en lysfunktion i et
+                KNX/DALI-projekt.
+              </p>
+            </div>
+
+            <div class="lighting-practice-grid">
+              <article class="card lighting-task">
+                <span class="lighting-task__label">Opgave 1</span>
+                <h3>Tænd/sluk gruppe</h3>
+                <p>
+                  Et tryk skal tænde/slukke en gruppe armaturer. Find ud af om KNX-adressen går til
+                  gatewayens gruppeobjekt, og om gatewayen peger på den rigtige DALI-gruppe.
+                </p>
+              </article>
+              <article class="card lighting-task">
+                <span class="lighting-task__label">Opgave 2</span>
+                <h3>Dæmpning</h3>
+                <p>
+                  Kort tryk tænder/slukker, langt tryk dæmper. Tjek at der er separate objekter og
+                  gruppeadresser til switch og relativ dæmpning.
+                </p>
+              </article>
+              <article class="card lighting-task">
+                <span class="lighting-task__label">Opgave 3</span>
+                <h3>Scene</h3>
+                <p>
+                  En scene kan fx sætte flere armaturer til bestemte niveauer. Tjek både KNX-sceneobjekt
+                  og om scenen er gemt/programmeret i DALI/gatewayen.
+                </p>
+              </article>
+              <article class="card lighting-task">
+                <span class="lighting-task__label">Opgave 4</span>
+                <h3>Fejl på armatur</h3>
+                <p>
+                  Hvis et armatur ikke reagerer: tjek DALI-adresse, gruppe, driverforsyning, DALI-bus
+                  og om gatewayen melder lampe-/driverfejl.
+                </p>
+              </article>
+            </div>
+
+            <article class="card dali-block">
+              <h3 class="section-title dali-block__title">Typiske fejl der giver mening for elever</h3>
+              <ul>
+                <li>KNX-gruppeadressen er rigtig, men gatewayen er mappet til forkert DALI-gruppe.</li>
+                <li>Dæmpning er linket til tænd/sluk-objektet i stedet for dæmpeobjektet.</li>
+                <li>En scene kaldes fra KNX, men scenen er ikke gemt i DALI/gatewayen.</li>
+                <li>Et armatur er udskiftet, men ikke adresseret eller lagt i den rigtige gruppe igen.</li>
+                <li>Status vises ikke, fordi gatewayens feedbackobjekt ikke er linket til KNX.</li>
+              </ul>
+            </article>
+
+            <section class="card dali-exercise" aria-labelledby="dali-exercise-title">
+              <div class="ets-exercise__header">
+                <div>
+                  <p class="ets-exercise__eyebrow">Miniøvelse</p>
+                  <h3 id="dali-exercise-title">Find fejlen i lysfunktionen</h3>
+                </div>
+                <span class="ets-exercise__tag">DALI/KNX</span>
+              </div>
+
+              <p>
+                Scenarie: Trykket sender korrekt på <code>4/0/1</code>, og du kan se telegrammet i ETS Group
+                Monitor. Alligevel tænder armaturgruppen ikke. Hvad vil du kontrollere først?
+              </p>
+
+              <form class="dali-exercise__form" id="dali-exercise-form">
+                <label>
+                  Første tjek
+                  <select id="dali-check-select">
+                    <option value="">Vælg handling</option>
+                    <option value="mapping">Kontrollér gatewayens mapping fra KNX-gruppeadresse til DALI-gruppe</option>
+                    <option value="psu">Udskift KNX-strømforsyningen med det samme</option>
+                    <option value="status">Lav en ny statusadresse uden at tjekke gatewayen</option>
+                    <option value="scene">Gem en scene i stedet for tænd/sluk-funktionen</option>
+                  </select>
+                </label>
+                <div class="toolbar">
+                  <button type="submit" class="btn">Tjek svar</button>
+                  <button type="reset" class="btn btn--ghost">Nulstil</button>
+                </div>
+              </form>
+              <div class="ets-exercise__result" id="dali-exercise-result" role="status" aria-live="polite"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz & ord -->
+      <section
+        id="panel-learn"
+        class="panel"
+        role="tabpanel"
+        aria-labelledby="tab-learn"
+        hidden
+      >
+        <div class="panel__intro">
+          <h2>Quiz &amp; ordliste</h2>
+          <p>
+            Øvelsesmateriale til repetition – ikke den officielle KNX-basisprøve.
+          </p>
+        </div>
+
+        <div class="subtabs-container" data-subtabs="learn">
+          <div class="subtabs" aria-label="Undersektion quiz">
+            <button
+              type="button"
+              class="subtabs__btn is-active"
+              data-sub="quiz"
+              aria-pressed="true"
+            >
+              Quiz
+            </button>
+            <button type="button" class="subtabs__btn" data-sub="words" aria-pressed="false">
+              Ordliste DA ⇄ EN
+            </button>
+            <button type="button" class="subtabs__btn" data-sub="cards" aria-pressed="false">
+              Flashcards
+            </button>
+          </div>
+
+          <div id="sub-quiz" class="subpanel is-visible">
+          <div class="quiz-box">
+            <p class="quiz-box__progress" id="quiz-progress" aria-live="polite"></p>
+            <p class="quiz-box__question" id="quiz-question"></p>
+            <div class="quiz-box__answers" id="quiz-answers"></div>
+            <p class="quiz-box__feedback" id="quiz-feedback" aria-live="polite"></p>
+            <div class="toolbar">
+              <button type="button" class="btn" id="quiz-next" disabled>
+                Næste spørgsmål
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="sub-words" class="subpanel" hidden>
+          <div class="table-wrap">
+            <table class="word-table">
+              <thead>
+                <tr>
+                  <th>Dansk</th>
+                  <th>English</th>
+                  <th>Kort note</th>
+                </tr>
+              </thead>
+              <tbody id="word-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="sub-cards" class="subpanel" hidden>
+          <div class="flashcard" id="flashcard">
+            <button type="button" class="flashcard__surface" id="flashcard-flip">
+              <span class="flashcard__label" id="flashcard-side">EN</span>
+              <span class="flashcard__text" id="flashcard-text"></span>
+              <span class="flashcard__hint">Klik for at vende</span>
+            </button>
+          </div>
+          <div class="toolbar toolbar--center">
+            <button type="button" class="btn btn--ghost" id="flashcard-prev">
+              Forrige
+            </button>
+            <button type="button" class="btn" id="flashcard-next">Næste</button>
+          </div>
+        </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Træningsværktøj til undervisning. Indhold skal verificeres mod jeres materialer og
+        gældende standarder.
+      </p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

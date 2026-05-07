@@ -1,0 +1,1522 @@
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "m26-knx-checklist";
+  var STORAGE_KEY_REMOTE = "m26-knx-remote-checklist";
+
+  var checklistItems = {
+    prep: [
+      "Åbn korrekt ETS-projektfil og lav backup/export før ændringer.",
+      "Tjek funktionsbeskrivelse: hvilke tryk, sensorer, aktuatorer og gruppeadresser indgår?",
+      "Kontrollér produktdatabaser og applikationsprogrammer for de KNX-enheder, der skal bruges.",
+      "Planlæg fysisk adresse pr. enhed, fx område.linje.enhed, før du downloader.",
+    ],
+    mount: [
+      "Tjek KNX TP-polaritet, busklemme og at enheden er placeret på korrekt linje/segment.",
+      "Kontrollér busspænding efter skolens/lærerens procedure og kun med korrekt udstyr.",
+      "Mærk enheder og tavlepladser så fysisk installation matcher ETS-projektet.",
+      "Kontrollér at programmeringsknap og LED kan tilgås på de enheder, der skal adresseres.",
+    ],
+    config: [
+      "Tildel fysisk adresse og download den til den rigtige enhed via programmeringsknap.",
+      "Aktivér relevante parametre, så de nødvendige kommunikationsobjekter bliver synlige.",
+      "Link objekter til gruppeadresser: kommando, status, dæmpning og scene holdes adskilt.",
+      "Kontrollér DPT på hvert link, fx DPT 1.xxx til tænd/sluk og DPT 3.xxx til relativ dæmpning.",
+    ],
+    test: [
+      "Download applikation efter parameter- eller linkændringer.",
+      "Test funktionen fysisk: tryk, relæudgang, status og evt. visualisering.",
+      "Brug ETS Group Monitor til at se gruppeadresse, værdi, DPT og afsender.",
+      "Notér fejl: forkert gruppeadresse, forkert DPT, manglende download eller forkert fysisk adresse.",
+    ],
+    handover: [
+      "Gem og eksportér opdateret ETS-projektfil.",
+      "Opdatér gruppeadressenavne, så næste person kan forstå placering og funktion.",
+      "Dokumentér hvilke enheder der er downloadet, og hvilke funktioner der er testet.",
+      "Aflever kort testnotat med gruppeadresser, fysisk adressering og eventuelle kendte afvigelser.",
+    ],
+  };
+
+  var remoteChecklistItems = {
+    net: [
+      "Fjernadgang sker via aftalt og dokumenteret metode (fx VPN eller leverandørens godkendte løsning).",
+      "Bygningsautomation er på eget netsegment eller isoleret zone – ikke direkte ud på usikret gæste-Wi-Fi.",
+      "Firewall/regler er gennemgået: kun nødvendige porte og målrettede tilladelser.",
+      "Der findes kontaktperson ved leverandør og hos kunden ved hændelser.",
+    ],
+    accounts: [
+      "Personlige konti – ingen delte „standard“-adgangskoder på tværs af kunder.",
+      "Multifaktor eller stærke adgangskoder hvor systemet understøtter det.",
+      "Rettigheder er mindst mulige (hvem må konfigurere vs. kun overvåge).",
+      "Adgang tilbagekaldes ved medarbejder-skift eller projektafslutning.",
+    ],
+    ops: [
+      "Firmware/software på gateways og relevante enheder er noteret og opdateringsplan aftalt.",
+      "Logning/alarmer ved fejl eller uventet adgang er konfigureret efter behov og lovgrundlag.",
+      "Ændringer i fjernopsætning dokumenteres (hvad, hvornår, hvem).",
+      "Backup af projektfiler og konfiguration findes og er testet til genindlæsning.",
+    ],
+  };
+
+  var faultNodes = {
+    start: {
+      title: "Hvilken KNX/ETS-fejl ser du?",
+      body:
+        "Start med at afgrænse om fejlen ligger i ETS-linket, i download/fysisk adresse, i buslinjen eller i status/visualisering. Brug projektfil, gruppeadresser og monitorer før du ændrer noget.",
+      choices: [
+        { label: "Tryk/sensor gør ikke det forventede", next: "function_wrong" },
+        { label: "Enhed kan ikke programmeres eller findes ikke i ETS", next: "download_issue" },
+        { label: "Flere KNX-enheder på linjen virker ikke", next: "bus_line" },
+        { label: "Visualisering/status viser forkert tilstand", next: "status_issue" },
+      ],
+    },
+    function_wrong: {
+      title: "Funktion virker forkert",
+      body:
+        "Tjek først gruppeadressen: sender trykkets objekt og modtager aktuatorens objekt på samme gruppeadresse? Sammenlign navnet i ETS med funktionsbeskrivelsen, fx 4/0/1 for tænd/sluk udgang 1.",
+      choices: [
+        { label: "Gruppeadresse mangler eller er linket forkert", next: "group_link" },
+        { label: "Adresse er rigtig, men værdien giver ikke mening", next: "dpt_issue" },
+        { label: "Parametre/objekter ser forkerte ud i produktet", next: "parameter_issue" },
+      ],
+    },
+    group_link: {
+      title: "Gruppeadresse og objekter",
+      body:
+        "I ETS: åbn gruppeadressen og se hvilke kommunikationsobjekter der er linket. Et tænd/sluk-tryk skal normalt linkes til et 1-bit switch-objekt på aktuatoren. Undgå at blande kommando og status i samme adresse, medmindre projektet bevidst bruger den struktur.",
+      choices: [
+        { label: "Link rettet – download applikation og test", next: "test_monitor" },
+        { label: "Objektet findes ikke eller er skjult", next: "parameter_issue" },
+      ],
+    },
+    dpt_issue: {
+      title: "DPT passer ikke til funktionen",
+      body:
+        "Kontrollér datapunkttypen: tænd/sluk er typisk DPT 1.xxx, relativ dæmpning DPT 3.xxx, procent/værdi DPT 5.xxx og temperatur ofte DPT 9.xxx. Forkert DPT kan give telegrammer, der sendes, men ikke forstås rigtigt.",
+      choices: [
+        { label: "DPT/objektvalg rettet i ETS", next: "test_monitor" },
+        { label: "Det er en dæmpefunktion med flere objekter", next: "dimming_issue" },
+      ],
+    },
+    parameter_issue: {
+      title: "Parametre og synlige objekter",
+      body:
+        "Mange KNX-produkter viser først bestemte objekter, når funktionen aktiveres i parametrene. Tjek fx om kanal, statusobjekt, dimmeobjekt eller sceneobjekt er slået til i applikationen.",
+      choices: [
+        { label: "Parametre ændret – download applikation", next: "test_monitor" },
+        { label: "Produktet virker stadig forkert", next: "escalate" },
+      ],
+    },
+    dimming_issue: {
+      title: "Dæmpning kræver ofte flere adresser",
+      body:
+        "En dæmper har ofte separat adresse til tænd/sluk, relativ dæmpning, absolut værdi og status. Tjek at langt tryk ikke er linket til tænd/sluk-adressen, og at DPT 3.xxx bruges til relativ dæmpning.",
+      choices: [
+        { label: "Dæmpeadresser adskilt og testet", next: "test_monitor" },
+        { label: "Stadig uklart – brug Group Monitor", next: "test_monitor" },
+      ],
+    },
+    download_issue: {
+      title: "Download eller fysisk adresse fejler",
+      body:
+        "Kontrollér programmeringsknap/LED, interfaceforbindelse, linjevalg og individuel adresse. Hvis en enhed er udskiftet, skal både fysisk adresse og applikation passe til projektet.",
+      choices: [
+        { label: "Programmerings-LED/interface er problemet", next: "bus_line" },
+        { label: "Forkert eller duplikeret fysisk adresse", next: "physical_address" },
+        { label: "Download lykkes, men funktion virker ikke", next: "function_wrong" },
+      ],
+    },
+    physical_address: {
+      title: "Fysisk adresse",
+      body:
+        "Den fysiske adresse identificerer enheden, fx 1.1.12. To enheder må ikke have samme adresse på samme installation. Brug ETS diagnose til at finde enheden, og dokumentér ændringen bagefter.",
+      choices: [
+        { label: "Fysisk adresse rettet og downloadet", next: "test_monitor" },
+        { label: "Enheden kan stadig ikke findes", next: "bus_line" },
+      ],
+    },
+    bus_line: {
+      title: "Buslinje, forsyning og interface",
+      body:
+        "Hvis flere enheder fejler, så afgræns linjen: busspænding, polaritet, kortslutning, linjekobler, strømforsyning og om ETS-interfacet er på den rigtige linje. Følg kun målinger du er uddannet til.",
+      choices: [
+        { label: "Bus/forsyning rettet – test telegrammer", next: "test_monitor" },
+        { label: "Linjekobler/filter kan blokere telegrammer", next: "coupler_filter" },
+        { label: "Kræver målinger eller leverandørhjælp", next: "escalate" },
+      ],
+    },
+    coupler_filter: {
+      title: "Linjekobler og filtertabeller",
+      body:
+        "Ved flere linjer/områder kan koblere filtrere gruppeadresser. Tjek om gruppeadressen er brugt på tværs af linjer, og om filtertabellen er opdateret/downloadet.",
+      choices: [
+        { label: "Kobler/filter rettet og downloadet", next: "test_monitor" },
+        { label: "Fejlen er lokal på én linje", next: "bus_line" },
+      ],
+    },
+    status_issue: {
+      title: "Status eller visualisering viser forkert",
+      body:
+        "Skeln mellem kommandoadresse og statusadresse. Visualisering bør ofte læse aktuatorens tilbagemelding, fx 4/1/1 for status udgang 1, ikke kun trykkets kommandoadresse.",
+      choices: [
+        { label: "Statusobjekt mangler gruppeadresse", next: "group_link" },
+        { label: "Visualisering bruger forkert adresse/DPT", next: "dpt_issue" },
+        { label: "Statusobjekt er ikke aktiveret i parametre", next: "parameter_issue" },
+      ],
+    },
+    test_monitor: {
+      title: "Test med Group Monitor",
+      body:
+        "Brug ETS Group Monitor til at se om den rigtige gruppeadresse sender den forventede værdi. Notér gruppeadresse, DPT, værdi, tidspunkt og hvilken enhed der sender.",
+      choices: [
+        { label: "Telegrammer ser rigtige ud – dokumentér rettelsen", next: "resolved_docs" },
+        { label: "Der kommer ingen telegrammer", next: "download_issue" },
+        { label: "Telegrammer kommer, men forkert værdi/DPT", next: "dpt_issue" },
+      ],
+    },
+    resolved_docs: {
+      title: "Afslut i ETS-projektet",
+      body:
+        "Gem/backup projektet, opdatér gruppeadressenavne og noter hvad der blev rettet: fysisk adresse, parametre, gruppeadresse, DPT, download og testresultat. Det er vigtigt for den næste, der overtager projektet.",
+      choices: [{ label: "Start en ny KNX/ETS-fejl", next: "start" }],
+    },
+    escalate: {
+      title: "Eskalering",
+      body:
+        "Saml ETS-projektuddrag, screenshots af gruppeadresser/objekter, monitor-log, produktnavn, fysisk adresse og hvad der er forsøgt. Undgå tilfældige ændringer på et anlæg uden backup.",
+      choices: [{ label: "Start forfra med ny afgrænsning", next: "start" }],
+    },
+  };
+
+  var quizQuestions = [
+    {
+      q: "Hvad er forskellen på en fysisk adresse og en gruppeadresse i KNX?",
+      answers: [
+        "Fysisk adresse beskriver funktionen, gruppeadresse beskriver enheden.",
+        "Fysisk adresse identificerer enheden, gruppeadresse bruges til funktionen/telegrammer.",
+        "De betyder det samme, men skrives med forskellige tegn.",
+      ],
+      correct: 1,
+      explain:
+        "Den fysiske adresse er enhedens adresse, fx 1.1.12. Gruppeadressen er den funktion objekter kommunikerer på, fx 4/0/1.",
+    },
+    {
+      q: "Hvad er en gruppeadresse i praksis blevet sammenlignet med i undervisningen?",
+      answers: [
+        "En elektronisk samlemuffe for kommunikationsobjekter.",
+        "En sikring for KNX-strømforsyningen.",
+        "En fysisk placering i tavlen.",
+      ],
+      correct: 0,
+      explain:
+        "Flere objekter kan linkes til samme gruppeadresse og dermed kommunikere om samme funktion.",
+    },
+    {
+      q: "Hvilken DPT passer typisk til et almindeligt tænd/sluk-objekt?",
+      answers: ["DPT 1.xxx", "DPT 3.xxx", "DPT 9.xxx"],
+      correct: 0,
+      explain:
+        "DPT 1.xxx er 1-bit værdier og bruges typisk til tænd/sluk, ja/nej og lignende binære funktioner.",
+    },
+    {
+      q: "Hvad skal du typisk gøre efter ændring af parametre eller gruppeadresselinks i ETS?",
+      answers: [
+        "Kun gemme projektet, enhederne opdaterer sig selv.",
+        "Downloade applikationen til den relevante enhed.",
+        "Slette den fysiske adresse.",
+      ],
+      correct: 1,
+      explain:
+        "Hvis applikationsparametre eller links er ændret, skal ændringen downloades til enheden før den virker i anlægget.",
+    },
+    {
+      q: "Hvad er den bedste første test, hvis en KNX-funktion ikke virker, og du er usikker på om telegrammet sendes?",
+      answers: [
+        "Åbn ETS Group Monitor og se gruppeadresse, værdi og afsender.",
+        "Udskift alle aktuatorer på linjen.",
+        "Opret en ny hovedgruppe uden at undersøge den gamle.",
+      ],
+      correct: 0,
+      explain:
+        "Group Monitor er velegnet til at se om den rigtige gruppeadresse sender den forventede værdi.",
+    },
+    {
+      q: "Hvorfor bør kommandoadresse og statusadresse ofte holdes adskilt?",
+      answers: [
+        "Fordi status ikke må bruges i KNX.",
+        "Fordi visualisering ofte skal vise faktisk tilstand fra aktuatoren, ikke bare kommandoen fra trykket.",
+        "Fordi status altid bruger DPT 9.xxx.",
+      ],
+      correct: 1,
+      explain:
+        "En kommando fortæller hvad man ønsker. En status fortæller hvad aktuatoren faktisk melder tilbage.",
+    },
+    {
+      q: "Hvad gør en KNX-DALI gateway?",
+      answers: [
+        "Den oversætter KNX-funktioner til DALI-grupper, adresser eller scener.",
+        "Den erstatter alle DALI-drivere.",
+        "Den er kun en strømforsyning til KNX-bussen.",
+      ],
+      correct: 0,
+      explain:
+        "Gatewayen er broen mellem KNX-gruppeadresser og DALI-lysstyring.",
+    },
+    {
+      q: "Hvis ETS Group Monitor viser telegram på 4/0/1, men DALI-armaturgruppen ikke tænder, hvad er et godt næste tjek?",
+      answers: [
+        "Om KNX-DALI gatewayen mapper 4/0/1 til den rigtige DALI-gruppe.",
+        "Om tastaturet på computeren virker.",
+        "Om statusadressen har et pænere navn.",
+      ],
+      correct: 0,
+      explain:
+        "Når KNX-telegrammet findes, følger man signalvejen videre til gatewayens mapping og DALI-gruppen.",
+    },
+    {
+      q: "Hvad er en typisk fejl ved dæmpning i et KNX/ETS-projekt?",
+      answers: [
+        "At relativ dæmpning linkes til tænd/sluk-adressen i stedet for dæmpeobjektet.",
+        "At dæmpning altid kræver fysisk adresse 0.0.0.",
+        "At DPT aldrig betyder noget for dæmpning.",
+      ],
+      correct: 0,
+      explain:
+        "Kort tryk og langt tryk bruger ofte forskellige objekter/adresser: switch til tænd/sluk og DPT 3.xxx til relativ dæmpning.",
+    },
+    {
+      q: "Hvad er den typiske maksimale afstand mellem en PSU og den fjerneste enhed på et KNX TP-segment (undervisningsgrundlag)?",
+      answers: ["700 m", "350 m", "1000 m"],
+      correct: 1,
+      explain:
+        "Ifølge jeres diagramregler er der typisk maks. 350 m mellem PSU og enhed på linjen (plus kontrol af samlet segment og andre grænser).",
+    },
+    {
+      q: "Hvad er typisk maks. samlet busledning i ét TP-segment?",
+      answers: ["350 m", "700 m", "1000 m"],
+      correct: 2,
+      explain:
+        "Diagrammet angiver ofte maks. 1000 m kabel i ét segment – kombineret med regler for PSU/enhed og enhed/enhed.",
+    },
+    {
+      q: "Hvorfor er navngivning af gruppeadresser vigtig?",
+      answers: [
+        "Fordi ETS ellers ikke kan gemme projektet.",
+        "Fordi den næste person skal kunne forstå placering og funktion uden at gætte.",
+        "Fordi gruppeadressen kun virker, hvis navnet indeholder ordet lys.",
+      ],
+      correct: 1,
+      explain:
+        "Gode navne som “4. Sal – Lok. 406A/B – Tænd/sluk udgang 1” gør projektet lettere at overtage og fejlfinde.",
+    },
+    {
+      q: "Hvad er backbone i en større KNX-installation?",
+      answers: [
+        "Den øverste buslinje, som forbinder områder via områdekoblere.",
+        "Et andet navn for en almindelig trykkontakt.",
+        "Den DALI-linje, der forsyner armaturer med lys.",
+      ],
+      correct: 0,
+      explain:
+        "Backbone er den overordnede linje i topologien og bruges til at forbinde områder i større anlæg.",
+    },
+    {
+      q: "Hvad gør en områdekobler typisk?",
+      answers: [
+        "Den forbinder backbone med et område.",
+        "Den ændrer DPT automatisk på alle gruppeadresser.",
+        "Den tænder og slukker direkte for 230 V-belastninger.",
+      ],
+      correct: 0,
+      explain:
+        "Områdekobleren er en topologienhed, der forbinder backbone med et områdes hovedlinje.",
+    },
+    {
+      q: "Hvad gør en linjekobler i KNX-topologien?",
+      answers: [
+        "Den forbinder en hovedlinje med en underlinje og kan filtrere telegrammer.",
+        "Den laver alle gruppeadresser om til fysiske adresser.",
+        "Den bruges kun til at programmere DALI-armaturer.",
+      ],
+      correct: 0,
+      explain:
+        "Linjekobleren adskiller linjer logisk og kan hjælpe med at begrænse trafik mellem linjer.",
+    },
+    {
+      q: "Hvad beskriver en fysisk adresse som 1.1.12?",
+      answers: [
+        "Område, linje og enhed i KNX-topologien.",
+        "Hovedgruppe, mellemgruppe og undergruppe for funktionen.",
+        "DPT-type, værdi og statusflag.",
+      ],
+      correct: 0,
+      explain:
+        "En fysisk adresse bruges til at identificere den enkelte enhed i topologien, fx område 1, linje 1, enhed 12.",
+    },
+    {
+      q: "Hvad beskriver en tre-leddet gruppeadresse som 4/0/1?",
+      answers: [
+        "En funktionsadresse, som kommunikationsobjekter kan linkes til.",
+        "En enheds fysiske placering på buskablet.",
+        "Antal strømforsyninger, linjeforstærkere og aktuatorer.",
+      ],
+      correct: 0,
+      explain:
+        "Gruppeadressen bruges til funktionen, fx tænd/sluk, status, dæmpning eller værdi.",
+    },
+    {
+      q: "Hvad er et kommunikationsobjekt i ETS?",
+      answers: [
+        "En dataport i enhedens applikation, som linkes til gruppeadresser.",
+        "Et billede af tavlen i projektet.",
+        "En automatisk backup af ETS-projektet.",
+      ],
+      correct: 0,
+      explain:
+        "Objekter som Switch, Status og Dimming er de punkter, der sender eller modtager telegrammer.",
+    },
+    {
+      q: "Hvorfor er DPT vigtig?",
+      answers: [
+        "Den fortæller, hvordan telegrammets værdi skal forstås.",
+        "Den bestemmer kun farven på KNX-kablet.",
+        "Den erstatter behovet for gruppeadresser.",
+      ],
+      correct: 0,
+      explain:
+        "DPT sikrer, at afsender og modtager tolker værdien ens, fx 1 bit, relativ dæmpning eller temperatur.",
+    },
+    {
+      q: "Hvilken DPT bruges ofte til relativ dæmpning?",
+      answers: ["DPT 3.xxx", "DPT 1.xxx", "DPT 9.xxx"],
+      correct: 0,
+      explain:
+        "DPT 3.xxx bruges typisk til relativ dæmpning, fx lysere/mørkere ved langt tryk.",
+    },
+    {
+      q: "Hvilken DPT bruges ofte til temperatur og andre måleværdier?",
+      answers: ["DPT 9.xxx", "DPT 1.xxx", "DPT 3.xxx"],
+      correct: 0,
+      explain:
+        "DPT 9.xxx er typisk 2-byte flydende værdi og bruges ofte til temperatur, lysniveau og lignende målinger.",
+    },
+    {
+      q: "Hvad er en aktuator i KNX?",
+      answers: [
+        "En enhed der udfører en handling, fx tænder et relæ eller styrer en ventil.",
+        "En enhed der kun måler temperatur.",
+        "Et navn for ETS-projektfilen.",
+      ],
+      correct: 0,
+      explain:
+        "Aktuatorer omsætter telegrammer til fysiske handlinger i installationen.",
+    },
+    {
+      q: "Hvad er en sensor i KNX?",
+      answers: [
+        "En enhed der registrerer noget eller sender en betjeningskommando.",
+        "En busstrømforsyning på 30 V DC.",
+        "Et filter i linjekobleren.",
+      ],
+      correct: 0,
+      explain:
+        "Sensorer kan fx være tryk, bevægelsesmeldere, temperaturfølere eller vindueskontakter.",
+    },
+    {
+      q: "Hvad betyder det, at KNX er hændelsesstyret?",
+      answers: [
+        "Enheder sender typisk telegrammer, når noget sker.",
+        "Alle enheder spørger hinanden hvert sekund.",
+        "ETS skal være åbent hele tiden for at anlægget virker.",
+      ],
+      correct: 0,
+      explain:
+        "Et tryk, en sensorændring eller en statusændring kan udløse et telegram på bussen.",
+    },
+    {
+      q: "Hvad er Bus Monitor typisk mere rå end Group Monitor til?",
+      answers: [
+        "At se mere direkte bustrafik og telegrammer på lavere niveau.",
+        "At tegne bygningens rumstruktur automatisk.",
+        "At oprette DALI-grupper uden gateway.",
+      ],
+      correct: 0,
+      explain:
+        "Group Monitor er ofte nok til funktionsfejl, mens Bus Monitor bruges mere forsigtigt til rå busdiagnose.",
+    },
+    {
+      q: "Hvad er en god første regel ved fejlfinding i ETS?",
+      answers: [
+        "Afgræns fejlen og følg telegrammets vej trin for trin.",
+        "Slet alle gruppeadresser og start forfra.",
+        "Skift DPT tilfældigt indtil noget virker.",
+      ],
+      correct: 0,
+      explain:
+        "Start med funktion, afsender, gruppeadresse, modtager, DPT, flags, download og monitorering.",
+    },
+    {
+      q: "Hvad kan være galt, hvis et objekt ikke sender telegrammer?",
+      answers: [
+        "Forkerte flags, manglende link, forkert parameter eller manglende download.",
+        "At gruppeadressen har for kort navn.",
+        "At ETS-projektet har for mange rum.",
+      ],
+      correct: 0,
+      explain:
+        "Objektets parametre, flags og gruppeadresselinks skal passe, og ændringer skal downloades til enheden.",
+    },
+    {
+      q: "Hvad er typisk maks. afstand mellem to vilkårlige enheder på samme TP-segment?",
+      answers: ["700 m", "350 m", "1200 m"],
+      correct: 0,
+      explain:
+        "I undervisningsgrundlaget bruges typisk maks. 700 m mellem to enheder på samme segment.",
+    },
+    {
+      q: "Hvorfor må man ikke kun kigge på den samlede kabellængde i KNX TP?",
+      answers: [
+        "Fordi PSU-til-enhed og enhed-til-enhed også har egne grænser.",
+        "Fordi kabellængde aldrig betyder noget i KNX.",
+        "Fordi kun antallet af tryk betyder noget.",
+      ],
+      correct: 0,
+      explain:
+        "Et segment kan godt være under 1000 m samlet, men stadig bryde fx 350 m fra PSU til fjerneste enhed.",
+    },
+    {
+      q: "Hvad gør en linjeforstærker?",
+      answers: [
+        "Den forstærker/genskaber buskommunikation og opdeler linjen i segmenter.",
+        "Den dæmper lys direkte på seks kanaler.",
+        "Den oversætter KNX til DALI-scener.",
+      ],
+      correct: 0,
+      explain:
+        "En linjeforstærker er infrastruktur på bussen, ikke en funktionsaktuator til lamper.",
+    },
+    {
+      q: "Hvad er en typisk busspænding på KNX TP?",
+      answers: ["30 V DC", "230 V AC", "12 V AC"],
+      correct: 0,
+      explain:
+        "KNX TP-bussen forsynes typisk af en KNX-strømforsyning omkring 30 V DC.",
+    },
+    {
+      q: "Hvad bør du gøre før større ændringer i et eksisterende ETS-projekt?",
+      answers: [
+        "Sørge for backup og dokumentere, hvad du ændrer.",
+        "Slette projektfilen og oprette alt igen.",
+        "Ændre alle fysiske adresser for en sikkerheds skyld.",
+      ],
+      correct: 0,
+      explain:
+        "Backup og dokumentation gør det muligt at rulle tilbage og hjælper den næste, der skal fejlfinde.",
+    },
+    {
+      q: "Hvorfor kan en funktion fejle, selv om gruppeadressen ser rigtig ud?",
+      answers: [
+        "DPT, objektlink, flags, parameter eller download kan stadig være forkert.",
+        "Gruppeadresser virker kun om morgenen.",
+        "ETS kræver altid internetforbindelse for at sende telegrammer.",
+      ],
+      correct: 0,
+      explain:
+        "Adresse-navnet er kun én del. Objekt, datatype, flags, parameteropsætning og download skal også passe.",
+    },
+    {
+      q: "Hvad skal du typisk kontrollere, hvis status ikke vises i visualisering?",
+      answers: [
+        "Om aktuatorens statusobjekt er linket til den rigtige statusadresse og sender status.",
+        "Om trykkets fysiske adresse har et lavere nummer.",
+        "Om DALI-armaturet har samme navn som rummet.",
+      ],
+      correct: 0,
+      explain:
+        "Visualisering bør ofte vise faktisk status fra aktuatoren, ikke kun kommandoen fra betjeningen.",
+    },
+    {
+      q: "Hvad er et godt princip for gruppeadressestruktur?",
+      answers: [
+        "Brug en fast logik, så funktioner er lette at finde og forstå.",
+        "Brug tilfældige numre, så projektet bliver mere sikkert.",
+        "Lav altid kun én gruppeadresse til hele bygningen.",
+      ],
+      correct: 0,
+      explain:
+        "En fast struktur for fx etage, rum og funktion gør projektet nemmere at teste og vedligeholde.",
+    },
+    {
+      q: "Hvad betyder download af fysisk adresse i ETS?",
+      answers: [
+        "At enheden får sin individuelle adresse på bussen.",
+        "At alle gruppeadresser automatisk slettes.",
+        "At DALI-bussen får ny spænding.",
+      ],
+      correct: 0,
+      explain:
+        "Fysisk adresse-download bruges til at give en KNX-enhed dens individuelle adresse, ofte via programmeringsknap.",
+    },
+    {
+      q: "Hvad betyder applikationsdownload i ETS?",
+      answers: [
+        "At parametre, objekter og gruppeadresselinks sendes til enheden.",
+        "At bygningstegningen downloades til computeren.",
+        "At buskablet måles automatisk.",
+      ],
+      correct: 0,
+      explain:
+        "Applikationsdownload sender den funktionelle opsætning til enheden, så ændringerne virker i anlægget.",
+    },
+  ];
+
+  var glossary = [
+    {
+      da: "Aktuator",
+      en: "Actuator",
+      note: "Enhed der udfører en handling (fx relæ, dimmer).",
+    },
+    {
+      da: "Sensor",
+      en: "Sensor",
+      note: "Måler en størrelse eller tilstand (bevægelse, temperatur …).",
+    },
+    {
+      da: "Gateway",
+      en: "Gateway",
+      note: "Binder forskellige net/protokoller sammen kontrolleret.",
+    },
+    {
+      da: "Kommissionering",
+      en: "Commissioning",
+      note: "Igangsetting, test og dokumentation før/overdragelse.",
+    },
+    {
+      da: "Brugerflade",
+      en: "Human-machine interface (HMI)",
+      note: "Grafisk visning og betjening – fx på PC eller panel.",
+    },
+    {
+      da: "Topologi",
+      en: "Topology",
+      note: "Den måde enheder og linjer er forbundet på.",
+    },
+    {
+      da: "Datatype",
+      en: "Data type",
+      note: "Hvilken form værdier har på bus/integration.",
+    },
+    {
+      da: "Firmware",
+      en: "Firmware",
+      note: "Indbygget software i enheder – kan kræve opdatering.",
+    },
+    {
+      da: "Gruppeadresse",
+      en: "Group address",
+      note: "Logisk adresse et telegram sendes til – planlæg struktur og dokumentér.",
+    },
+    {
+      da: "Linje / segment",
+      en: "Line / segment",
+      note: "Bussegment med egne enheder og evt. strømforsyning.",
+    },
+    {
+      da: "Telegram",
+      en: "Telegram",
+      note: "Datapakke på bussen med mål og nyttedata.",
+    },
+    {
+      da: "Busafsætning",
+      en: "Bus coupling unit",
+      note: "Adapter mellem enhed og bus (terminologi kan variere efter fabrikat).",
+    },
+    {
+      da: "Scene",
+      en: "Scene",
+      note: "Foruddefineret lys-/funktionstilstand ved ét kommando.",
+    },
+    {
+      da: "PID-regulator",
+      en: "PID controller",
+      note: "Regulator med P, I og D-led til stabil styring (temperatur m.m.).",
+    },
+    {
+      da: "VPN",
+      en: "Virtual private network",
+      note: "Krypteret tunnel til fjernadgang over usikre net.",
+    },
+    {
+      da: "Områdekobler",
+      en: "Area coupler",
+      note: "OK – kobler backbone til et områdes hovedlinje.",
+    },
+    {
+      da: "Linjekobler",
+      en: "Line coupler",
+      note: "LK – kobler hovedlinje til underlinje.",
+    },
+    {
+      da: "Linjeforstærker",
+      en: "Line repeater",
+      note: "LF – bus-enhed med fysisk adresse; forlænger/opdeler linjen i segmenter.",
+    },
+    {
+      da: "Bussegment",
+      en: "Bus segment",
+      note: "Afsnit af linje med egne længde- og afstandsgrænser.",
+    },
+    {
+      da: "DALI",
+      en: "Digital Addressable Lighting Interface",
+      note: "Digital bus til styring af belysning – dimring, grupper, scenarier m.m.",
+    },
+    {
+      da: "DALI-2",
+      en: "DALI-2",
+      note: "Udvidet generation efter IEC 62386; certificerede enheder og flere funktioner.",
+    },
+    {
+      da: "Daglysregulering",
+      en: "Daylight-linked control",
+      note: "Kunstlys tilpasses efter tilført dagslys – typisk med luxsensor.",
+    },
+    {
+      da: "Luxsensor",
+      en: "Photosensor / illuminance sensor",
+      note: "Måler lysniveau til regulering og energioptimering.",
+    },
+  ];
+
+  function activateMainTab(panelId, scrollIntoMain) {
+    if (!panelId) return;
+    var buttons = document.querySelectorAll(".tabs__btn");
+    var panels = document.querySelectorAll(".panel");
+
+    buttons.forEach(function (b) {
+      var target = b.getAttribute("data-panel");
+      var active = target === panelId;
+      b.classList.toggle("is-active", active);
+      b.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    panels.forEach(function (panel) {
+      var id = panel.id.replace("panel-", "");
+      var visible = id === panelId;
+      panel.classList.toggle("is-visible", visible);
+      panel.hidden = !visible;
+    });
+
+    if (scrollIntoMain) {
+      var mainEl = document.getElementById("main");
+      if (mainEl && typeof mainEl.scrollIntoView === "function") {
+        var reduceMotion =
+          window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        mainEl.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      }
+    }
+  }
+
+  function initTabs() {
+    var buttons = document.querySelectorAll(".tabs__btn");
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        activateMainTab(btn.getAttribute("data-panel"), false);
+      });
+    });
+
+    document.querySelectorAll(".home-zone[data-go-panel]").forEach(function (zone) {
+      zone.addEventListener("click", function () {
+        activateMainTab(zone.getAttribute("data-go-panel"), true);
+      });
+    });
+  }
+
+  function loadChecks() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveChecks(map) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function loadRemoteChecks() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY_REMOTE);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveRemoteChecks(map) {
+    try {
+      localStorage.setItem(STORAGE_KEY_REMOTE, JSON.stringify(map));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function initChecklists() {
+    var stored = loadChecks();
+
+    Object.keys(checklistItems).forEach(function (key) {
+      var ul = document.querySelector('.checklist[data-checklist="' + key + '"]');
+      if (!ul) return;
+
+      checklistItems[key].forEach(function (text, index) {
+        var id = key + "-" + index;
+        var li = document.createElement("li");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        cb.checked = !!stored[id];
+        cb.addEventListener("change", function () {
+          var m = loadChecks();
+          m[id] = cb.checked;
+          saveChecks(m);
+        });
+        var label = document.createElement("label");
+        label.setAttribute("for", id);
+        label.textContent = text;
+        li.appendChild(cb);
+        li.appendChild(label);
+        ul.appendChild(li);
+      });
+    });
+
+    var resetBtn = document.getElementById("btn-checklist-reset");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        if (!confirm("Nulstille alle afkrydsninger på denne enhed?")) return;
+        saveChecks({});
+        document
+          .querySelectorAll("#panel-install .checklist input[type=checkbox]")
+          .forEach(function (cb) {
+            cb.checked = false;
+          });
+      });
+    }
+  }
+
+  function initRemoteChecklists() {
+    var stored = loadRemoteChecks();
+
+    Object.keys(remoteChecklistItems).forEach(function (key) {
+      var ul = document.querySelector(
+        '.checklist--remote[data-remote-checklist="' + key + '"]'
+      );
+      if (!ul) return;
+
+      remoteChecklistItems[key].forEach(function (text, index) {
+        var id = "remote-" + key + "-" + index;
+        var li = document.createElement("li");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = id;
+        cb.checked = !!stored[id];
+        cb.addEventListener("change", function () {
+          var m = loadRemoteChecks();
+          m[id] = cb.checked;
+          saveRemoteChecks(m);
+        });
+        var label = document.createElement("label");
+        label.setAttribute("for", id);
+        label.textContent = text;
+        li.appendChild(cb);
+        li.appendChild(label);
+        ul.appendChild(li);
+      });
+    });
+
+    var resetBtn = document.getElementById("btn-remote-checklist-reset");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", function () {
+        if (!confirm("Nulstille fjernadgang-checklisten på denne enhed?")) return;
+        saveRemoteChecks({});
+        document
+          .querySelectorAll(".checklist--remote input[type=checkbox]")
+          .forEach(function (cb) {
+            cb.checked = false;
+          });
+      });
+    }
+  }
+
+  function initSubtabsContainers() {
+    document.querySelectorAll(".subtabs-container").forEach(function (container) {
+      var subtabBar = container.querySelector(".subtabs");
+      if (!subtabBar) return;
+
+      var btns = subtabBar.querySelectorAll(".subtabs__btn");
+      var panels = {};
+      container.querySelectorAll(":scope > .subpanel").forEach(function (el) {
+        var name = el.id.replace(/^sub-/, "");
+        panels[name] = el;
+      });
+
+      btns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var sub = btn.getAttribute("data-sub");
+          btns.forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle("is-active", on);
+            b.setAttribute("aria-pressed", on ? "true" : "false");
+          });
+          Object.keys(panels).forEach(function (k) {
+            var el = panels[k];
+            if (!el) return;
+            var show = k === sub;
+            el.classList.toggle("is-visible", show);
+            el.hidden = !show;
+          });
+        });
+      });
+    });
+  }
+
+  function initFaultFinding() {
+    var titleEl = document.getElementById("fault-title");
+    var bodyEl = document.getElementById("fault-body");
+    var choicesEl = document.getElementById("fault-choices");
+    var metaEl = document.getElementById("fault-step-label");
+    var restartBtn = document.getElementById("fault-restart");
+    if (!titleEl || !bodyEl || !choicesEl || !metaEl) return;
+
+    var pathLabels = [];
+
+    function renderMeta() {
+      metaEl.textContent =
+        pathLabels.length === 0
+          ? "Sti: Start"
+          : "Sti: Start → " + pathLabels.join(" → ");
+    }
+
+    function showNode(id) {
+      var node = faultNodes[id];
+      if (!node) return;
+
+      if (id === "start") {
+        pathLabels = [];
+      }
+
+      titleEl.textContent = node.title;
+      bodyEl.textContent = node.body;
+      choicesEl.innerHTML = "";
+      renderMeta();
+
+      node.choices.forEach(function (choice) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "fault-choice-btn";
+        b.textContent = choice.label;
+        b.addEventListener("click", function () {
+          if (choice.next === "start") {
+            pathLabels = [];
+          } else {
+            pathLabels.push(choice.label);
+          }
+          showNode(choice.next);
+        });
+        choicesEl.appendChild(b);
+      });
+    }
+
+    if (restartBtn) {
+      restartBtn.addEventListener("click", function () {
+        pathLabels = [];
+        showNode("start");
+      });
+    }
+
+    showNode("start");
+  }
+
+  function initDaylightDemo() {
+    var slider = document.getElementById("daylight-slider");
+    var room = document.getElementById("daylight-room");
+    var beam = document.getElementById("daylight-beam");
+    var valEl = document.getElementById("daylight-value");
+    var lamps = [
+      { id: "daylight-lamp-a", meterId: "daylight-lamp-a-meter", mode: "daylight", warmRate: 1.24 },
+      {
+        id: "daylight-lamp-b",
+        meterId: "daylight-lamp-b-meter",
+        mode: "otherZone",
+        warmFloor: 0.76,
+        warmLeak: 0.22,
+      },
+      {
+        id: "daylight-lamp-c",
+        meterId: "daylight-lamp-c-meter",
+        mode: "otherZone",
+        warmFloor: 0.84,
+        warmLeak: 0.15,
+      },
+    ];
+
+    function tick() {
+      if (!slider || !room) return;
+      var v = parseInt(slider.value, 10);
+      if (isNaN(v)) v = 0;
+      var d = v / 100;
+
+      slider.setAttribute("aria-valuetext", v + " procent udelys");
+
+      if (valEl) {
+        valEl.textContent =
+          "Udelys " +
+          v +
+          "% · vindueszonen dæmpes som ved rigtig daglysstyring · de to andre lamper er kun lidt påvirket.";
+      }
+
+      var skyTop = Math.round(14 + d * 62);
+      var skyMid = Math.round(28 + d * 48);
+      var skyBot = Math.round(42 + d * 38);
+      room.style.background =
+        "linear-gradient(180deg, hsl(215, " +
+        Math.round(42 + d * 28) +
+        "%, " +
+        skyTop +
+        "%) 0%, hsl(205, " +
+        Math.round(35 + d * 20) +
+        "%, " +
+        skyMid +
+        "%) 55%, hsl(40, " +
+        Math.round(18 + d * 25) +
+        "%, " +
+        skyBot +
+        "%) 100%)";
+
+      if (beam) {
+        beam.style.opacity = String(0.12 + d * 0.82);
+      }
+
+      lamps.forEach(function (cfg) {
+        var lamp = document.getElementById(cfg.id);
+        if (!lamp) return;
+        var warm;
+        if (cfg.mode === "daylight") {
+          warm = Math.max(0.02, 1 - d * cfg.warmRate);
+        } else {
+          warm = Math.max(cfg.warmFloor, 1 - d * cfg.warmLeak);
+        }
+        lamp.style.setProperty("--lamp-warm", warm.toFixed(4));
+
+        var meter = cfg.meterId ? document.getElementById(cfg.meterId) : null;
+        if (meter) {
+          var pct = Math.round(warm * 100);
+          meter.textContent = pct + "%";
+          meter.setAttribute("aria-label", pct + " procent simuleret kunstlys");
+        }
+      });
+    }
+
+    if (slider && room) {
+      slider.addEventListener("input", tick);
+      slider.addEventListener("change", tick);
+      tick();
+    }
+  }
+
+  function fillWordTable() {
+    var tbody = document.getElementById("word-table-body");
+    if (!tbody) return;
+
+    glossary.forEach(function (row) {
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" +
+        escapeHtml(row.da) +
+        "</td><td>" +
+        escapeHtml(row.en) +
+        "</td><td>" +
+        escapeHtml(row.note) +
+        "</td>";
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function initDistanceChecker() {
+    var form = document.getElementById("distance-check-form");
+    var results = document.getElementById("distance-results");
+    if (!form || !results) return;
+
+    var limits = [
+      { id: "dist-segment", max: 1000, label: "Segment (samlet busledning)" },
+      { id: "dist-psu-dev", max: 350, label: "PSU til enhed" },
+      { id: "dist-dev-dev", max: 700, label: "Enhed til enhed" },
+      { id: "dist-lk-lf", max: 700, label: "Linjekobler til første LF" },
+    ];
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var msgs = [];
+
+      limits.forEach(function (L) {
+        var el = document.getElementById(L.id);
+        if (!el || el.value === "") return;
+        var v = parseFloat(el.value, 10);
+        if (isNaN(v) || v < 0) return;
+        if (v > L.max) {
+          msgs.push({
+            type: "bad",
+            text:
+              L.label +
+              ": " +
+              v +
+              " m overstiger typisk maks. " +
+              L.max +
+              " m.",
+          });
+        } else {
+          msgs.push({
+            type: "ok",
+            text:
+              L.label +
+              ": " +
+              v +
+              " m er inden for typisk maks. " +
+              L.max +
+              " m.",
+          });
+        }
+      });
+
+      var psuPsuEl = document.getElementById("dist-psu-psu");
+      if (psuPsuEl && psuPsuEl.value !== "") {
+        var pp = parseFloat(psuPsuEl.value, 10);
+        if (!isNaN(pp) && pp >= 0) {
+          if (pp < 200) {
+            msgs.push({
+              type: "warn",
+              text:
+                "Mellem to PSU: " +
+                pp +
+                " m er under den ofte nævnte typiske minimum (~200 m) – kontrollér producent.",
+            });
+          } else {
+            msgs.push({
+              type: "ok",
+              text:
+                "Mellem to PSU: " +
+                pp +
+                " m – verificér stadig mod datablad og linjetype.",
+            });
+          }
+        }
+      }
+
+      if (msgs.length === 0) {
+        results.innerHTML =
+          '<p class="distance-results__empty">Udfyld mindst ét felt og tryk „Tjek tal“.</p>';
+        return;
+      }
+
+      results.innerHTML = msgs
+        .map(function (m) {
+          return (
+            '<p class="distance-results__line distance-results__line--' +
+            m.type +
+            '">' +
+            escapeHtml(m.text) +
+            "</p>"
+          );
+        })
+        .join("");
+    });
+
+    form.addEventListener("reset", function () {
+      window.setTimeout(function () {
+        results.innerHTML = "";
+      }, 0);
+    });
+  }
+
+  var quizIndex = 0;
+  var quizAnswered = false;
+
+  function initQuiz() {
+    var progressEl = document.getElementById("quiz-progress");
+    var questionEl = document.getElementById("quiz-question");
+    var answersEl = document.getElementById("quiz-answers");
+    var feedbackEl = document.getElementById("quiz-feedback");
+    var nextBtn = document.getElementById("quiz-next");
+
+    function shuffleAnswers(items) {
+      var shuffled = items.slice();
+      for (var i = shuffled.length - 1; i > 0; i -= 1) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = shuffled[i];
+        shuffled[i] = shuffled[j];
+        shuffled[j] = temp;
+      }
+      return shuffled;
+    }
+
+    function render() {
+      quizAnswered = false;
+      var q = quizQuestions[quizIndex];
+      var answerOptions = shuffleAnswers(
+        q.answers.map(function (text, i) {
+          return {
+            text: text,
+            isCorrect: i === q.correct,
+          };
+        })
+      );
+
+      progressEl.textContent =
+        "Spørgsmål " + (quizIndex + 1) + " af " + quizQuestions.length;
+      questionEl.textContent = q.q;
+      feedbackEl.textContent = "";
+      answersEl.innerHTML = "";
+      nextBtn.disabled = true;
+
+      answerOptions.forEach(function (answer, i) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "quiz-answer";
+        b.textContent = answer.text;
+        b.addEventListener("click", function () {
+          if (quizAnswered) return;
+          quizAnswered = true;
+          var correct = answer.isCorrect;
+          Array.prototype.forEach.call(answersEl.children, function (child, idx) {
+            child.disabled = true;
+            if (answerOptions[idx].isCorrect) child.classList.add("is-correct");
+            else if (idx === i && !correct) child.classList.add("is-wrong");
+            if (idx === i) child.classList.add("is-chosen");
+          });
+          feedbackEl.textContent = q.explain;
+          nextBtn.disabled = false;
+        });
+        answersEl.appendChild(b);
+      });
+    }
+
+    nextBtn.addEventListener("click", function () {
+      quizIndex = (quizIndex + 1) % quizQuestions.length;
+      render();
+    });
+
+    render();
+  }
+
+  var cardIndex = 0;
+  var cardShowEn = true;
+
+  function initFlashcards() {
+    var surface = document.getElementById("flashcard-flip");
+    var textEl = document.getElementById("flashcard-text");
+    var sideEl = document.getElementById("flashcard-side");
+    var prevBtn = document.getElementById("flashcard-prev");
+    var nextBtn = document.getElementById("flashcard-next");
+
+    function renderCard() {
+      var row = glossary[cardIndex];
+      cardShowEn = true;
+      sideEl.textContent = "EN";
+      textEl.textContent = row.en;
+    }
+
+    surface.addEventListener("click", function () {
+      var row = glossary[cardIndex];
+      cardShowEn = !cardShowEn;
+      if (cardShowEn) {
+        sideEl.textContent = "EN";
+        textEl.textContent = row.en;
+      } else {
+        sideEl.textContent = "DA";
+        textEl.textContent = row.da + " – " + row.note;
+      }
+    });
+
+    prevBtn.addEventListener("click", function () {
+      cardIndex = (cardIndex - 1 + glossary.length) % glossary.length;
+      renderCard();
+    });
+
+    nextBtn.addEventListener("click", function () {
+      cardIndex = (cardIndex + 1) % glossary.length;
+      renderCard();
+    });
+
+    renderCard();
+  }
+
+  function initEtsExercise() {
+    var form = document.getElementById("ets-exercise-form");
+    var gaSelect = document.getElementById("ets-ga-select");
+    var dptSelect = document.getElementById("ets-dpt-select");
+    var result = document.getElementById("ets-exercise-result");
+    var scenarioText = document.getElementById("ets-scenario-text");
+    var scenarioFacts = document.getElementById("ets-scenario-facts");
+    var progress = document.getElementById("ets-exercise-progress");
+    var nextBtn = document.getElementById("ets-next-scenario");
+    var scenarioIndex = 0;
+    var scenarios = [
+      {
+        text:
+          "Scenarie 1: Du står i ETS og skal linke venstre tryk i lokale 406A/B til udgang 1 på Hager-relæet. Hvilken gruppeadresse og DPT vælger du?",
+        facts: [
+          "Trykobjektet hedder Switch og sender 1 bit.",
+          "Relæets udgang 1 har et modtageobjekt til tænd/sluk.",
+          "Visualisering skal først kobles på senere.",
+        ],
+        ga: "4/0/1",
+        dpt: "1",
+        gaOptions: ["4/0/1", "4/0/2", "4/1/1", "4/3/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. Venstre tryks 1-bit objekt og Hager-relæets udgang 1 linkes på 4/0/1: 4. Sal – Lok. 406A/B – Tænd/sluk udgang 1.",
+      },
+      {
+        text:
+          "Scenarie 2: Højre tryk skal styre en anden lampe på udgang 2. Begge lamper sidder i lokale 406A/B, men må ikke tænde samtidig. Hvad vælger du?",
+        facts: [
+          "Udgang 1 er allerede brugt til venstre tryk.",
+          "Udgang 2 skal have sin egen funktion.",
+          "Funktionen er stadig almindelig tænd/sluk.",
+        ],
+        ga: "4/0/2",
+        dpt: "1",
+        gaOptions: ["4/0/1", "4/0/2", "4/1/1", "4/2/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. Udgang 2 skal have sin egen tænd/sluk-gruppeadresse: 4/0/2. DPT 1.xxx passer til 1-bit tænd/sluk.",
+      },
+      {
+        text:
+          "Scenarie 3: Kunden klager over, at visualiseringen viser forkert tilstand efter manuel betjening. Du skal linke tilbagemelding fra relæets udgang 1. Hvad er mest korrekt?",
+        facts: [
+          "Objektet på relæet hedder Status/Switch status.",
+          "Visualiseringen skal vise faktisk tilstand, ikke sende kommando.",
+          "Værdien er enten tændt eller slukket.",
+        ],
+        ga: "4/1/1",
+        dpt: "1",
+        gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/3/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. Status for udgang 1 ligger på 4/1/1 og er stadig en 1-bit værdi, fordi den fortæller tændt/slukket tilstand.",
+      },
+      {
+        text:
+          "Scenarie 4: En kollega har linket tænd/sluk korrekt, men lang tryk skal nu dæmpe lyset op og ned. Hvilken ekstra gruppeadresse og DPT skal bruges?",
+        facts: [
+          "Kort tryk tænder/slukker allerede på sin egen adresse.",
+          "Langt tryk skal sende relativ dæmpning.",
+          "Dæmpning må ikke blandes sammen med statusadressen.",
+        ],
+        ga: "4/2/1",
+        dpt: "3",
+        gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/2/2"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. Relativ dæmpning bruger typisk DPT 3.xxx og bør ligge på en separat dæmpeadresse, her 4/2/1.",
+      },
+      {
+        text:
+          "Scenarie 5: Læreren vil have en fælles sluk-funktion for hele 4. sal. Flere relæudgange skal lytte på samme kommando. Hvad vælger du?",
+        facts: [
+          "Det er ikke en statusværdi.",
+          "Flere aktuatorobjekter kan linkes til samme gruppeadresse.",
+          "Kommandoen er stadig bare sluk/tænd som 1 bit.",
+        ],
+        ga: "4/3/1",
+        dpt: "1",
+        gaOptions: ["4/0/1", "4/1/1", "4/2/1", "4/3/1"],
+        dptOptions: ["1", "3", "5", "9"],
+        success:
+          "Korrekt. En fælles sluk-funktion kan være en separat gruppeadresse, fx 4/3/1, som flere relæudgange lytter på. DPT 1.xxx passer til sluk/tænd.",
+      },
+    ];
+    var gaLabels = {
+      "4/0/1": "4/0/1 – 4. Sal – Lok. 406A/B – Tænd/sluk udgang 1",
+      "4/0/2": "4/0/2 – 4. Sal – Lok. 406A/B – Tænd/sluk udgang 2",
+      "4/1/1": "4/1/1 – 4. Sal – Lys – Status udgang 1",
+      "4/2/1": "4/2/1 – 4. Sal – Lys – Dæmpning lok. 406A/B",
+      "4/2/2": "4/2/2 – 4. Sal – Lys – Dæmpeværdi lok. 406A/B",
+      "4/3/1": "4/3/1 – 4. Sal – Lys – Fælles sluk",
+    };
+    var dptLabels = {
+      1: "DPT 1.xxx – 1 bit tænd/sluk",
+      3: "DPT 3.xxx – 4 bit dæmp relativt",
+      5: "DPT 5.xxx – 1 byte værdi/procent",
+      9: "DPT 9.xxx – 2 byte flydende værdi",
+    };
+
+    if (!form || !gaSelect || !dptSelect || !result || !scenarioText || !scenarioFacts || !progress) return;
+
+    function setResult(kind, text) {
+      result.classList.remove("is-good", "is-warn");
+      if (kind) result.classList.add(kind);
+      result.textContent = text;
+    }
+
+    function renderScenario() {
+      var scenario = scenarios[scenarioIndex];
+      scenarioText.textContent = scenario.text;
+      progress.textContent = scenarioIndex + 1 + " / " + scenarios.length;
+      scenarioFacts.innerHTML = "";
+      scenario.facts.forEach(function (fact) {
+        var li = document.createElement("li");
+        li.textContent = fact;
+        scenarioFacts.appendChild(li);
+      });
+      renderOptions(gaSelect, scenario.gaOptions, "Vælg gruppeadresse", gaLabels);
+      renderOptions(dptSelect, scenario.dptOptions, "Vælg DPT", dptLabels);
+      setResult("", "");
+    }
+
+    function renderOptions(select, values, placeholder, labels) {
+      select.innerHTML = "";
+      var empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = placeholder;
+      select.appendChild(empty);
+      values.forEach(function (value) {
+        var option = document.createElement("option");
+        option.value = value;
+        option.textContent = labels[value] || value;
+        select.appendChild(option);
+      });
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      var ga = gaSelect.value;
+      var dpt = dptSelect.value;
+      var scenario = scenarios[scenarioIndex];
+
+      if (!ga || !dpt) {
+        setResult("is-warn", "Vælg både gruppeadresse og datapunkttype, før du tjekker svaret.");
+        return;
+      }
+
+      if (ga === scenario.ga && dpt === scenario.dpt) {
+        setResult("is-good", scenario.success);
+        return;
+      }
+
+      if (ga === "4/1/1" && scenario.ga !== "4/1/1") {
+        setResult(
+          "is-warn",
+          "Du har valgt en statusadresse. Status er tilbagemelding fra relæ/visualisering, ikke selve betjeningskommandoen."
+        );
+        return;
+      }
+
+      if (ga === "4/2/1" || dpt === "3") {
+        setResult(
+          "is-warn",
+          "Du har valgt noget, der hører til dæmpning. Det er kun korrekt, når scenariet handler om at dæmpe lyset."
+        );
+        return;
+      }
+
+      if (dpt !== scenario.dpt) {
+        setResult(
+          "is-warn",
+          "Gruppeadressen kan være tæt på, men datapunkttypen passer ikke til funktionen i scenariet."
+        );
+        return;
+      }
+
+      setResult(
+        "is-warn",
+        "Ikke helt. Kig på om scenariet handler om udgang 1, udgang 2, status, dæmpning eller fælles sluk, og vælg den gruppeadresse der matcher funktionen."
+      );
+    });
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", function () {
+        scenarioIndex = (scenarioIndex + 1) % scenarios.length;
+        renderScenario();
+      });
+    }
+
+    form.addEventListener("reset", function () {
+      window.setTimeout(function () {
+        setResult("", "");
+      }, 0);
+    });
+
+    renderScenario();
+  }
+
+  function initDaliExercise() {
+    var form = document.getElementById("dali-exercise-form");
+    var select = document.getElementById("dali-check-select");
+    var result = document.getElementById("dali-exercise-result");
+
+    if (!form || !select || !result) return;
+
+    function setResult(kind, text) {
+      result.classList.remove("is-good", "is-warn");
+      if (kind) result.classList.add(kind);
+      result.textContent = text;
+    }
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      if (!select.value) {
+        setResult("is-warn", "Vælg hvad du vil kontrollere først.");
+        return;
+      }
+
+      if (select.value === "mapping") {
+        setResult(
+          "is-good",
+          "Korrekt. Når KNX-telegrammet findes i Group Monitor, er næste logiske tjek om KNX-DALI gatewayen mapper 4/0/1 til den rigtige DALI-gruppe/adresse."
+        );
+        return;
+      }
+
+      setResult(
+        "is-warn",
+        "Ikke første valg. Når telegrammet allerede ses i ETS, bør du først følge signalvejen ind i gatewayen og tjekke mappingen til DALI-gruppen."
+      );
+    });
+
+    form.addEventListener("reset", function () {
+      window.setTimeout(function () {
+        setResult("", "");
+      }, 0);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initTabs();
+    initChecklists();
+    initRemoteChecklists();
+    initSubtabsContainers();
+    initFaultFinding();
+    initDistanceChecker();
+    initDaylightDemo();
+    fillWordTable();
+    initQuiz();
+    initFlashcards();
+    initEtsExercise();
+    initDaliExercise();
+  });
+})();
