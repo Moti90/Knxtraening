@@ -217,9 +217,10 @@
                 <article class="card">
                   <h3>Det fysiske KNX TP</h3>
                   <ul>
-                    <li>Buskabel: typisk grønt parsnoet kabel (TP).</li>
-                    <li>Busspænding: ca. 30&nbsp;V&nbsp;DC fra en KNX-strømforsyning.</li>
-                    <li>Bus og data ligger på samme par – ingen separat datakabel.</li>
+                    <li>Buskabel: typisk grønt parsnoet kabel (TP), fx <strong>YCYM 2x2x0,8</strong> eller <strong>JY(St)Y 2x2x0,8</strong>.</li>
+                    <li>Busspænding: <strong>DC 30&nbsp;V SELV</strong> fra en KNX‑strømforsyning. Enhed kræver mindst <strong>21&nbsp;V</strong> for at fungere.</li>
+                    <li>Bus og data ligger på samme par – ingen separat datakabel og <strong>ingen termineringsmodstand</strong>.</li>
+                    <li>Bitrate: <strong>9.600&nbsp;bit/s</strong>, polaritet: rød = +, sort = –.</li>
                     <li>Standardiseret af KNX Association og programmeres med ETS.</li>
                   </ul>
                 </article>
@@ -232,6 +233,28 @@
                   sker: et tryk aktiveres, en sensor måler en ændring, eller en aktuator melder status
                   tilbage. Det giver en rolig bus, hvor kun relevant information sendes.
                 </p>
+                <p>
+                  På TP sendes telegrammer med <strong>9.600&nbsp;bit/s</strong> (ca. 104&nbsp;µs pr. bit).
+                  Bussen bruger <strong>CSMA/CA</strong>: enheder lytter før de sender, og hvis to sender
+                  samtidig vinder den med <em>logisk 0</em> (dominant). Et almindeligt switch‑telegram med
+                  kvittering tager kun ca. <strong>20&nbsp;ms</strong>.
+                </p>
+              </article>
+
+              <article class="card">
+                <h3>Lidt KNX‑historie</h3>
+                <p>
+                  KNX startede i <strong>1990</strong> i Bruxelles som <em>EIB Association</em> med
+                  <strong>15 producenter</strong>. I 1999 fusionerede EIBA med BCI (Frankrig, Batibus) og
+                  EHSA (Holland, EHS), og i 2006 blev navnet ændret til <strong>KNX Association</strong>.
+                  KNX er bagudkompatibel med EIB.
+                </p>
+                <ul>
+                  <li>I dag: <strong>500+ producenter</strong> og <strong>8.000+</strong> certificerede enheder.</li>
+                  <li>Standardiseret som ISO/IEC 14543‑3, EN 50090, CEN EN 13321 og GB/T 20965 (CN).</li>
+                  <li>KNX understøtter flere medier: <strong>TP, RF, IP og KNX&nbsp;IoT</strong> (IPv6).</li>
+                  <li>ETS findes som <strong>Professional, Lite, Bundle og Home</strong>.</li>
+                </ul>
               </article>
             </div>
           </details>
@@ -254,21 +277,43 @@
 
           <div class="topology-flow" aria-label="KNX topologi fra backbone til enhed">
             <div class="topology-flow__node topology-flow__node--backbone">
-              <span>Backbone</span>
+              <span>Backbone 0.0</span>
               <strong>Fælles rygrad</strong>
             </div>
             <div class="topology-flow__node topology-flow__node--area">
-              <span>Område</span>
+              <span>Område 1–15</span>
               <strong>Fx bygning eller etage</strong>
             </div>
             <div class="topology-flow__node topology-flow__node--mainline">
-              <span>Hovedlinje</span>
+              <span>Hovedlinje x.0</span>
               <strong>Fordeler i området</strong>
             </div>
             <div class="topology-flow__node topology-flow__node--line">
-              <span>Linje</span>
+              <span>Linje x.x.1–255</span>
               <strong>Tryk, sensorer og aktuatorer</strong>
             </div>
+          </div>
+
+          <div class="grid-2">
+            <article class="card">
+              <h4>Tal at huske</h4>
+              <ul>
+                <li>Op til <strong>15 områder</strong> og <strong>15 linjer</strong> pr. område.</li>
+                <li>Op til <strong>256 enheder</strong> pr. linjesegment (TP‑256).</li>
+                <li>Et stort anlæg kan rumme <strong>over 61.000</strong> enheder.</li>
+                <li>Default fysisk adresse fra fabrik: <code>15.15.255</code> (koblere/IP‑routere: <code>15.15.0</code>).</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>Hop count og filtertabel</h4>
+              <ul>
+                <li>Hvert telegram starter med <strong>hop count = 6</strong>.</li>
+                <li>Hver kobler/forstærker <strong>tæller 1 ned</strong> – ved 0 stopper telegrammet.</li>
+                <li>Linje‑/områdekoblere har <strong>filtertabel</strong> og sender kun nødvendige gruppeadresser videre.</li>
+                <li><strong>Linjeforstærkere har ikke filter</strong> – de sender alt videre.</li>
+                <li>KNX/IP routing bruger multicast <code>224.0.23.12</code>.</li>
+              </ul>
+            </article>
           </div>
               </section>
             </div>
@@ -277,67 +322,212 @@
           <details class="topic-dropdown">
             <summary>
               <span>KNX-begreber forklaret</span>
-              <small>Backbone, koblere, segment, fysisk adresse, kommunikationsobjekt, DPT og flags.</small>
+              <small>To adressetyper, topologi (segment → område → backbone), koblere vs. forstærker, gruppeobjekt, DPT og flags – efter KNX Basic.</small>
             </summary>
             <div class="topic-dropdown__body">
-              <div class="facts-grid">
-          <article class="card fact-card fact-card--backbone">
-            <h3>Backbone</h3>
-            <p>
-              Backbone er det øverste niveau i en større KNX-installation. Det kan være et fysisk
-              buskabel eller KNX/IP, men det er ikke bare “det første grønne kabel”.
-            </p>
-          </article>
-          <article class="card fact-card fact-card--area">
-            <h3>Område, hovedlinje og linje</h3>
-            <p>
-              Et KNX-anlæg bygges i niveauer: backbone øverst, derefter områder med hovedlinjer
-              og til sidst de almindelige linjer, hvor tryk, sensorer og aktuatorer sidder.
-            </p>
-          </article>
-          <article class="card fact-card fact-card--mainline">
-            <h3>Koblere</h3>
-            <p>
-              En områdekobler forbinder backbone med et område. En linjekobler forbinder en hovedlinje
-              med en underlinje og kan filtrere telegrammer, så kun relevant trafik sendes videre.
-            </p>
-          </article>
-          <article class="card fact-card fact-card--line">
-            <h3>Linje og segment</h3>
-            <p>
-              En linje er den del af KNX-bussen, hvor enhederne sidder. Et segment er et fysisk
-              stykke af linjen med egne længdegrænser, fx efter en linjeforstærker.
-            </p>
-          </article>
-          <article class="card fact-card">
-            <h3>Individuel adresse</h3>
-            <p>
-              Identificerer enheden på bussen, fx <code>1.1.12</code>. Den bruges til download,
-              diagnose og programmering, men beskriver ikke selve funktionen.
-            </p>
-          </article>
-          <article class="card fact-card">
-            <h3>Kommunikationsobjekt</h3>
-            <p>
-              Et objekt er en dataport i applikationen, fx “Switch”, “Status” eller “Dimming”.
-              Det er objekterne, der linkes til gruppeadresser.
-            </p>
-          </article>
-          <article class="card fact-card">
-            <h3>Datapunkttype (DPT)</h3>
-            <p>
-              DPT fortæller, hvordan værdien skal forstås. <code>1.xxx</code> er typisk 1 bit,
-              <code>3.xxx</code> relativ dæmpning, og <code>9.xxx</code> måleværdier som temperatur.
-            </p>
-          </article>
-          <article class="card fact-card">
-            <h3>Flags i ETS</h3>
-            <p>
-              Flags som Communication, Read, Write, Transmit og Update bestemmer, hvordan objektet
-              må kommunikere. Forkerte flags kan give fejl, selv om adressen ser rigtig ud.
-            </p>
-          </article>
+              <div class="panel__intro panel__intro--tight">
+                <p>
+                  I KNX-materialet skelnes der skarpt mellem <strong>hvor en enhed sidder i topologien</strong>
+                  (individuel adresse) og <strong>hvilken funktion telegrammer hører til</strong> (gruppeadresse).
+                  Efter idriftsættelse er det især gruppeadresser, der bruges i normal drift.
+                </p>
               </div>
+
+              <article class="card card--accent" aria-labelledby="knx-term-synonyms-title">
+                <h3 id="knx-term-synonyms-title">Samme begreb, to navne</h3>
+                <p>KNX Basic bruger faste synonymer mellem undervisningstekst og ETS:</p>
+                <dl class="abbr-list abbr-list--relaxed">
+                  <div>
+                    <dt>Individuel adresse</dt>
+                    <dd>= <strong>Fysisk adresse</strong> i ETS (format <code>A.L.B</code>, fx <code>1.1.12</code>).</dd>
+                  </div>
+                  <div>
+                    <dt>Gruppeobjekt</dt>
+                    <dd>= <strong>Kommunikationsobjekt</strong> i ETS – den port i enheden, der linkes til en gruppeadresse.</dd>
+                  </div>
+                </dl>
+              </article>
+
+              <div class="grid-2">
+                <article class="card">
+                  <h3>Individuel (fysisk) adresse</h3>
+                  <p>
+                    Bruges primært til <strong>kommissionering og diagnose</strong>: ETS sender programmeringstelegrammer
+                    til netop den enhed. Analogi fra materialet: som et brev adresseret til <em>én bestemt person</em>
+                    med navn og adresse.
+                  </p>
+                  <ul>
+                    <li><strong>16 bit</strong>, vist som <code>A.L.B</code>: område <strong>0–15</strong>, linje <strong>0–15</strong>, enhed <strong>0–255</strong>.</li>
+                    <li><code>A=0</code>: enheder på <strong>backbone-linjen</strong>. <code>L=0</code>: områdets <strong>hovedlinje</strong>. <code>B=0</code>: linjekobleren på den linje.</li>
+                    <li>Fabriks-/default: <code>15.15.255</code> (alm. enheder), <code>15.15.0</code> (koblere og IP-routere).</li>
+                  </ul>
+                </article>
+                <article class="card">
+                  <h3>Gruppeadresse</h3>
+                  <p>
+                    Bruges i <strong>normal drift</strong> mellem sensorer, aktuatorer og logik: samme funktion (fx „lys lokale 406 tænd/sluk“)
+                    deler én gruppeadresse. Analogi: som <em>masseudsendelse</em> til alle, der er tilmeldt samme adresse.
+                  </p>
+                  <ul>
+                    <li>Op til <strong>65.535</strong> gruppeadresser; <code>0/0/0</code> er reserveret til broadcast (bl.a. tildeling af individuel adresse).</li>
+                    <li>3-niveau i ETS: hoved / mellem / under – kun til struktur i projektet, ikke til selve bus-protokollen.</li>
+                    <li>Én sensor kan typisk sende <strong>ét</strong> telegram pr. objekt pr. gruppeadresse; en aktuator kan lytte på <strong>flere</strong> gruppeadresser pr. objekt.</li>
+                  </ul>
+                </article>
+              </div>
+
+              <section class="dist-section" aria-labelledby="knx-term-topology-title">
+              <h3 id="knx-term-topology-title" class="dist-section__title">Topologi: fra linjesegment til backbone</h3>
+              <p class="dist-section__lead">
+                Tænk „indenfra og ud“: først det fysiske segment med enheder, derefter hvordan linjer samles til et område,
+                og til sidst backbone mellem områder (eller IP som hurtig rygrad).
+              </p>
+
+              <div class="facts-grid">
+                <article class="card fact-card fact-card--line">
+                  <h3>Linjesegment</h3>
+                  <p>
+                    Det <strong>mindste topologi-trin</strong> på TP: alle enheder på samme segment kan tale direkte med hinanden.
+                    Hvert segment skal have <strong>egen strømforsyning med drossel</strong>. Kabler kan fordeles som stjerne, linje eller træ –
+                    <strong>ring er ikke tilladt</strong>.
+                  </p>
+                  <p>
+                    I moderne anlæg (TP‑256) typisk op til <strong>256 busenheder</strong> på samme TP‑linje (alle segmenter på linjen tælles med);
+                    pr. <strong>linjesegment</strong> gælder stadig bl.a. 1.000&nbsp;m samlet kabel og egen PSU. Skal ét logisk segment strække sig ud over 1.000&nbsp;m,
+                    bruges op til <strong>tre linjeforstærkere</strong> (fire segmenter). Ældre anlæg (før 2019) brugte ofte 64 enheder pr. segment – bland ikke reglerne.
+                  </p>
+                </article>
+                <article class="card fact-card fact-card--area">
+                  <h3>Område og hovedlinje</h3>
+                  <p>
+                    Hvis ét segment ikke rækker, forbindes op til <strong>15 underlinjer</strong> til områdets <strong>hovedlinje</strong>
+                    (linje <strong>0</strong> i området, fx <code>1.0</code>) via <strong>linjekoblere</strong>. Hver linje og hovedlinjen har egen PSU.
+                  </p>
+                  <p>
+                    Et område kan rumme <strong>over 4.000</strong> enheder. Linjeforstærkere må <strong>ikke</strong> sidde på hovedlinjen.
+                  </p>
+                </article>
+                <article class="card fact-card fact-card--backbone">
+                  <h3>Backbone og netværk</h3>
+                  <p>
+                    <strong>Backbone-linjen</strong> er <code>0.0</code> (område 0, linje 0). Op til <strong>15 områder</strong> kobles på via
+                    <strong>områdekoblere</strong> (backbone couplers). Backbone har også egen PSU. Et fuldt TP-net kan skaleres til
+                    <strong>over 61.000</strong> enheder.
+                  </p>
+                  <p>
+                    Backbone kan være TP eller erstattes/understøttes af <strong>KNXnet/IP</strong> (hurtigere, multicast <code>224.0.23.12</code>).
+                  </p>
+                </article>
+                <article class="card fact-card fact-card--mainline">
+                  <h3>Koblere, segmentkobler og linjeforstærker</h3>
+                  <p>
+                    <strong>Linje-, backbone- og segmentkoblere</strong> har en <strong>portfunktion (gate)</strong>: de videresender kun gruppeadresser,
+                    som ETS har lagt i deres <strong>filtertabel</strong> – mindre unødig trafik. De har galvanisk adskillelse mellem primær og sekundær side
+                    (fx hovedlinje ↔ underlinje, eller IP ↔ TP).
+                  </p>
+                  <p>
+                    <strong>Linjeforstærkeren</strong> har <strong>ingen filtertabel</strong> og sender <strong>alle</strong> telegrammer videre; den bruges til længde/forstærkning,
+                    ikke til at adskille funktioner.
+                  </p>
+                  <p>
+                    Hvert telegram starter med <strong>hop count 6</strong>; hver kobler/forstærker trækker 1 fra, indtil 0 – så undgås uendelige kredsløb.
+                  </p>
+                </article>
+              </div>
+              </section>
+
+              <article class="card">
+                <h3>Forkortelser på diagrammer (KNX Basic)</h3>
+                <p class="dist-section__lead">
+                  Bogstavkoderne er <strong>engelske</strong>, som på KNX‑diagrammer og i stand – så I kan slå dem op direkte.
+                  Forklaringerne er på dansk.
+                </p>
+                <dl class="abbr-list abbr-list--relaxed">
+                  <div>
+                    <dt lang="en">BC</dt>
+                    <dd>Backbone coupler – kobler backbone‑linjen til et områdes hovedlinje; har filtertabel.</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">LC</dt>
+                    <dd>Line coupler – kobler hovedlinje til underlinje; har filtertabel mellem linjerne.</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">SC</dt>
+                    <dd>Segment coupler – ekstra segment med filter (ETS6); kan blande medier (fx TP/RF).</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">LR</dt>
+                    <dd>Line repeater – linjeforstærker uden filter; videresender alle telegrammer.</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">PS</dt>
+                    <dd>Power supply (med drossel) – DC 30&nbsp;V til bussen; nogle tegninger skriver <span lang="en">Ps</span>.</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">DVC</dt>
+                    <dd>Device – busenhed: tryk, sensor, aktuator, kobler osv.</dd>
+                  </div>
+                  <div>
+                    <dt lang="en">HC</dt>
+                    <dd>Hop count – tæller i telegrammet (start 6); tælles ned i koblere og repeatere.</dd>
+                  </div>
+                </dl>
+              </article>
+
+              <section class="dist-section" aria-labelledby="knx-term-data-title">
+              <h3 id="knx-term-data-title" class="dist-section__title">Busenheder, objekter og data</h3>
+              <div class="facts-grid">
+                <article class="card fact-card">
+                  <h3>Fire funktionsklasser</h3>
+                  <p>En busenhed kan dække én eller flere roller (fx tryk med LED):</p>
+                  <ul>
+                    <li><strong>System:</strong> strømforsyning, grænseflader, koblere.</li>
+                    <li><strong>Sensor:</strong> måler eller betjening (tryk, bevægelse, temperatur …).</li>
+                    <li><strong>Aktuator:</strong> udfører kommando (relæ, dæmper, persienne …).</li>
+                    <li><strong>Styring:</strong> logik, timer, regulator – ofte uden egne fysiske udgange.</li>
+                  </ul>
+                </article>
+                <article class="card fact-card">
+                  <h3>Gruppeobjekt (kommunikationsobjekt)</h3>
+                  <p>
+                    Et <strong>gruppeobjekt</strong> er et lagersted i enheden, der forbinder applikationen med bussen. Størrelsen sættes af producenten
+                    (typisk 1 bit … op til 14 byte til fx tekst).
+                  </p>
+                  <p>
+                    ETS tillader kun at linke objekter med <strong>samme størrelse</strong> til samme gruppeadresse – fx 1-bit tryk til 1-bit relæudgang.
+                  </p>
+                </article>
+                <article class="card fact-card">
+                  <h3>Datapunkttype (DPT) og funktionsblok</h3>
+                  <p>
+                    <strong>DPT</strong> beskriver, hvordan nyttedata skal fortolkes, så enheder fra forskellige fabrikater forstår hinanden
+                    (fx <code>1.001</code> switch, <code>3.007</code> relativ dæmpning, <code>5.001</code> skalering 0–100&nbsp;%, <code>9.001</code> temperatur).
+                  </p>
+                  <p>
+                    Flere standard-DPT’er kan indgå i et <strong>funktionsblok</strong> (fx dæmpning: switch + relativ + absolut værdi).
+                    Producentens navne på objekter kan variere – det er DPT og link, der afgør, om det virker sammen.
+                  </p>
+                </article>
+                <article class="card fact-card">
+                  <h3>Flags i ETS – de 6 grundflag</h3>
+                  <p>
+                    Flags styrer, hvordan objektet må bruge bussen. Producentens forvalg bør kun ændres, når du har en konkret grund
+                    (fx slå <strong>Read</strong> fra på persienne‑objekter, så et Read‑telegram ikke utilsigtet stopper eller starter kørslen).
+                  </p>
+                  <ul class="ets-checks">
+                    <li><strong>C – Communication:</strong> hovedafbryder for objektets buskommunikation.</li>
+                    <li><strong>R – Read:</strong> andre kan anmode om værdi; objektet svarer med Response.</li>
+                    <li><strong>W – Write:</strong> objektet kan opdateres af telegrammer fra andre.</li>
+                    <li><strong>T – Transmit:</strong> sender ved værdiændring.</li>
+                    <li><strong>U – Update:</strong> behandler Response som Write (typisk til synkronisering).</li>
+                    <li><strong>I – Read on Init:</strong> efter spændingsgenvinding sendes Read for at hente aktuel værdi igen.</li>
+                  </ul>
+                  <p class="dist-section__lead" style="margin-top: 0.75rem; margin-bottom: 0">
+                    Selv uden C sendes der stadig <strong>kvittering</strong> (ack) på telegrammer – men objektet kommunikerer ikke aktivt som tilsigtet.
+                  </p>
+                </article>
+              </div>
+              </section>
             </div>
           </details>
 
@@ -371,8 +561,433 @@
               </div>
             </div>
           </details>
+
+          <details class="topic-dropdown">
+            <summary>
+              <span>KNX-medier: TP, RF, IP og IoT</span>
+              <small>Hvor bruges hvilket medie – og hvornår er KNX RF (868 MHz) et godt valg?</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <article class="card card--accent">
+                <h3>KNX understøtter flere medier</h3>
+                <p>
+                  KNX‑telegrammer kan sendes via flere medier i samme anlæg. Mediekoblere binder
+                  medierne sammen, og det medie en enhed bruger fremgår af produktmærkningen.
+                </p>
+              </article>
+
+              <div class="grid-2">
+                <article class="card">
+                  <h3>TP, IP og IoT</h3>
+                  <ul>
+                    <li><strong>KNX TP</strong> (parsnoet kabel): højeste pålidelighed – nyanlæg og store renoveringer.</li>
+                    <li><strong>KNX IP</strong> (Ethernet/Wi‑Fi, IPv4): hurtig backbone og kommunikation til paneler/visualisering.</li>
+                    <li><strong>KNX IoT</strong> (IPv6): nyere medie – Thread, single‑pair Ethernet, Wi‑Fi.</li>
+                    <li><strong>KNX RF</strong> (radio): når der ikke kan trækkes nye kabler.</li>
+                  </ul>
+                </article>
+                <article class="card">
+                  <h3>KNX RF i hovedtræk</h3>
+                  <ul>
+                    <li>Frekvens: <strong>868&nbsp;MHz</strong>.</li>
+                    <li>Rækkevidde: ca. <strong>100&nbsp;m</strong> i frit felt – langt mindre indendørs.</li>
+                    <li>Forsyning: batteri, energi‑høst (fx solcelle) eller netforsynet.</li>
+                    <li>To varianter: <strong>RF Ready</strong> (én kanal) og <strong>RF Multi</strong> (flere kanaler, frequency hopping – kræver ETS6).</li>
+                    <li>Op til <strong>2 RF‑repeatere</strong> ved RF Multi (op til 6 ved RF Ready).</li>
+                    <li><strong>Domain‑adresse</strong> sikrer, at kun enheder i samme anlæg taler sammen – også når naboanlæg er tæt på.</li>
+                  </ul>
+                </article>
+              </div>
+
+              <article class="card">
+                <h3>RF Multi i praksis</h3>
+                <p>
+                  RF Multi har <strong>fast (F)</strong> og <strong>slow (S)</strong> kanaler. Hurtige kanaler
+                  bruges fx til lys (F = 16,4 kbps), langsomme til varme/køling, hvor batterilevetid er vigtig.
+                  ETS vælger automatisk den rigtige kanal ud fra afsender og modtager. RF Multi understøtter
+                  <strong>KNX Secure</strong> (autentifikation, kryptering, sekvensnumre).
+                </p>
+              </article>
+            </div>
+          </details>
         </div>
 
+      </section>
+
+      <!-- KNX: TP afstande -->
+      <section
+        id="panel-distances"
+        class="panel page-section dist-page"
+        role="tabpanel"
+        aria-labelledby="tab-knx"
+        data-page="knx"
+        hidden
+      >
+        <div class="panel__intro dist-page__intro">
+          <p class="panel__kicker">KNX</p>
+          <h2>KNX TP – afstande og topologi</h2>
+          <p>
+            Typiske grænser for twisted-pair (busledning), som I bruger på TEC. Tal kan afvige efter
+            <strong>medietype og producent</strong> – brug altid datablad og jeres installationsgrundlag.
+          </p>
+        </div>
+
+        <div class="topic-accordion">
+          <details class="topic-dropdown">
+            <summary>
+              <span>Buslinje, kabel og strømforsyning</span>
+              <small>Sådan ser et lille øveanlæg og et større anlæg ud – grønt KNX TP-kabel, PSU og topologi-niveauer.</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <div class="callout callout--warn dist-callout">
+          <strong>OBS.</strong>
+          <span class="dist-callout__body">
+            Træningsnotat. Den konkrete PSU, kabel og linjetype (fx med eller uden repeater)
+            kan ændre grænserne.
+          </span>
+        </div>
+
+        <section class="dist-section" aria-labelledby="dist-heading-topology">
+          <h3 id="dist-heading-topology" class="dist-section__title">Busstruktur i praksis</h3>
+          <p class="dist-section__lead">
+            Det grønne kabel er KNX TP-bussen. Om kablet kaldes linje, hovedlinje eller backbone
+            afhænger af placeringen i topologien. I små øveanlæg har du ofte kun én almindelig linje.
+          </p>
+
+          <div class="simple-topology card" aria-label="Simpel KNX topologi">
+            <div class="simple-topology__block">
+              <h4>Lille øveanlæg</h4>
+              <p class="simple-topology__line">
+                PSU 30 V → grønt KNX TP-kabel → tryk / sensor / aktuator
+              </p>
+              <p>
+                Her kabler du normalt bare én almindelig KNX-linje. Det er den type opstilling,
+                man ofte møder på skolebordet.
+              </p>
+            </div>
+
+            <div class="simple-topology__block">
+              <h4>Større anlæg</h4>
+              <p class="simple-topology__line">
+                Backbone → områdekobler → hovedlinje → linjekobler → almindelig linje → enheder
+              </p>
+              <p>
+                Backbone er et topologi-niveau. Det kan være fysisk KNX-kabel eller KNX/IP,
+                men det er ikke bare det første grønne kabel i installationen.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <article class="card">
+              <h4>To typiske KNX TP‑kabler</h4>
+              <ul>
+                <li><strong>YCYM 2x2x0,8:</strong> testspænding <strong>4&nbsp;kV</strong>. Tørt, fugtigt og vådt miljø; udendørs hvis ikke i direkte sol.</li>
+                <li><strong>JY(St)Y 2x2x0,8:</strong> foliemskærm (St), testspænding <strong>2,5&nbsp;kV</strong>. Egnet til industri (lav EMI), udendørs kun i rør.</li>
+                <li>Begge: 2 parsnoede par – <strong>rød/sort</strong> bruges (rød=+, sort=–), <strong>hvid/gul</strong> er reserve (må ikke bruges til moduleret signal).</li>
+                <li>Loop‑modstand <strong>75&nbsp;Ω/1000&nbsp;m</strong>, loop‑kapacitet <strong>100&nbsp;nF/1000&nbsp;m</strong>.</li>
+                <li>Skærmen <strong>må ikke</strong> forbindes til udligningsskinnen (potentiel forstyrrelse).</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h4>Strømforsyningen (PSU)</h4>
+              <ul>
+                <li>Leverer <strong>DC 30&nbsp;V SELV</strong> via integreret eller ekstern <strong>drossel</strong>.</li>
+                <li>Output findes i <strong>160 / 320 / 640 / 1280&nbsp;mA</strong>.</li>
+                <li><strong>≥100&nbsp;ms buffer</strong> til at bro over korte netudfald uden at miste kommunikation.</li>
+                <li>Hver linje/segment skal have egen PSU – max <strong>2 PSU</strong> i samme segment (afstand iht. fabrikant).</li>
+                <li>Enheden kræver mindst <strong>DC 21&nbsp;V</strong> ved klemmen.</li>
+                <li>LED: <strong>grøn</strong> = OK, <strong>rød</strong> = overbelastet/kortslutning.</li>
+                <li>Alternativt findes <strong>DPSU</strong> (decentral) i 25/40/80&nbsp;mA – op til 8 stk. pr. linje.</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="callout callout--warn dist-callout">
+            <strong>Installation:</strong>
+            <span class="dist-callout__body">
+              Min. <strong>4&nbsp;mm</strong> afstand mellem KNX‑leder og 230&nbsp;V‑leder ved blotlagte kerner
+              (eller tilsvarende isolation). YCYM må gå parallelt med 230/400&nbsp;V; JY(St)Y kun parallelt med
+              230&nbsp;V. Buskabler bør mærkes som „KNX TP“/„BUS“. Polariteten skal være korrekt – ellers
+              fungerer enheden ikke.
+            </span>
+          </div>
+              </section>
+            </div>
+          </details>
+
+          <details class="topic-dropdown">
+            <summary>
+              <span>Forkortelser på KNX-diagrammer</span>
+              <small>BC, LC, LR, PS, DVC (engelske bogstavkoder som på diagram/stand) – og forskellen mellem line repeater og aktuator.</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <section class="dist-section" aria-labelledby="dist-heading-abbr">
+          <h3 id="dist-heading-abbr" class="dist-section__title">Begreber på diagrammet</h3>
+          <p class="dist-section__lead">
+            Én betydning pr. linje – scroll roligt ned mellem sektionerne.
+          </p>
+          <dl class="abbr-list abbr-list--relaxed">
+            <div>
+              <dt lang="en">BC</dt>
+              <dd>Backbone coupler – binder backbone til et områdes hovedlinje (samme rolle som nogle skemateckninger kalder OK).</dd>
+            </div>
+            <div>
+              <dt lang="en">LC</dt>
+              <dd>Line coupler – binder hovedlinje til underlinje (samme rolle som nogle skemateckninger kalder LK).</dd>
+            </div>
+            <div>
+              <dt lang="en">LR</dt>
+              <dd>
+                Line repeater – linjeforstærker; en <strong>bus-enhed</strong> med egen fysisk adresse, der forstærker
+                telegrammer og opdeler linjen i flere segmenter. Bruges, når kabellængden i én linje
+                overstiger 1.000&nbsp;m: max <strong>3 LR</strong> pr. linje, dvs. op til 4 segmenter
+                á 1.000&nbsp;m. Pr. <strong>linje</strong> må der i alt være op til <strong>256 enheder</strong>
+                (TP‑256). Anlæg fra før 2019 brugte typisk 64 enheder pr. segment.
+              </dd>
+            </div>
+            <div>
+              <dt lang="en">PS</dt>
+              <dd>Power supply (med drossel) – strømforsyning til bussen (30&nbsp;V&nbsp;DC); på nogle tegninger <span lang="en">PSU</span> eller <span lang="en">Ps</span>.</dd>
+            </div>
+            <div>
+              <dt lang="en">DVC</dt>
+              <dd>
+                Device – enhed på linjen; tryk, sensorer, aktuatorer osv.
+              </dd>
+            </div>
+          </dl>
+
+          <div class="dist-aside dist-aside--compare" aria-labelledby="dist-heading-lf-vs-act">
+            <h4 id="dist-heading-lf-vs-act" class="dist-aside__title">
+              Forskellen mellem line repeater (LR) og fx en 6-kanels aktuator
+            </h4>
+            <ul class="dist-compare-list">
+              <li>
+                <strong lang="en">LR</strong> (line repeater / linjeforstærker) er til <strong>bus/topologi</strong>:
+                den genskaber eller udvider bus-signalet og hjælper med segmentering og længde.
+                Du programmerer den ikke til at tænde seks lamper med gruppeadresser på samme måde som en aktuator.
+              </li>
+              <li>
+                <strong>En 6-kanels aktuator</strong> er en <strong>funktionsenhed</strong>: du har typisk seks
+                udgange/kanaler, der knyttes til <strong>gruppeobjekter</strong>, så lys, rulgardin eller lignende
+                kan styres fra panelet eller scenarie.
+              </li>
+              <li>
+                <strong>Fælles punkt:</strong> begge har <strong>fysisk bus-adresse</strong>, tilsluttes TP‑linjen
+                og tæller med i segment-/programmeringsarbejdet. Rollen er forskellig: LR er infrastruktur
+                på linjen, mens aktuatoren udfører en funktion i installationen.
+              </li>
+            </ul>
+          </div>
+              </section>
+            </div>
+          </details>
+
+          <details class="topic-dropdown">
+            <summary>
+              <span>Afstandsregler på KNX TP</span>
+              <small>1000&nbsp;m segment, 350&nbsp;m PS→enhed, 700&nbsp;m mellem enheder, LR-parallelkobling (ved LC) og afstand til 230&nbsp;V.</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <section class="dist-section" aria-labelledby="dist-heading-rules">
+          <h3 id="dist-heading-rules" class="dist-section__title">Afstande på TP (typiske tal)</h3>
+          <p class="dist-section__lead">
+            Hver regel står for sig. De to regler med <strong>700&nbsp;m</strong> gælder forskellige
+            målepunkter – læs overskriften og „mellem hvem“.
+          </p>
+
+          <ul class="rule-stack">
+            <li class="rule-card">
+              <span class="rule-card__badge">Segment</span>
+              <span class="rule-card__limit">≤ 1000&nbsp;m</span>
+              <h4 class="rule-card__title">Samlet busledning i ét segment</h4>
+              <p class="rule-card__text">
+                Alt KNX TP-kabel lagt sammen på samme segment må typisk ikke overstige 1000&nbsp;m.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge"><span lang="en">PS</span> → enhed</span>
+              <span class="rule-card__limit">≤ 350&nbsp;m</span>
+              <h4 class="rule-card__title">Fra strømforsyning til fjerneste enhed</h4>
+              <p class="rule-card__text">
+                Den længeste vej langs bussen fra den relevante strømforsyning (<span lang="en">PS</span>/<span lang="en">PSU</span>) til den enhed, der ligger længst væk.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge rule-card__badge--pair">700&nbsp;m · mellem enheder</span>
+              <span class="rule-card__limit">≤ 700&nbsp;m</span>
+              <h4 class="rule-card__title">To vilkårlige enheder på samme segment</h4>
+              <p class="rule-card__text">
+                Den største afstand målt langs bussen mellem to DVC – ikke det samme som LC→LR-reglen.
+              </p>
+            </li>
+            <li class="rule-card">
+              <span class="rule-card__badge rule-card__badge--pair-alt">700&nbsp;m · LC til LR</span>
+              <span class="rule-card__limit">≤ 700&nbsp;m</span>
+              <h4 class="rule-card__title"><span lang="en">LC</span> til første <span lang="en">LR</span> (linjekobler → linjeforstærker)</h4>
+              <p class="rule-card__text">
+                Gælder strækket fra LC til den første LR på den pågældende parallelgren – som på jeres tegning.
+              </p>
+            </li>
+            <li class="rule-card rule-card--special">
+              <span class="rule-card__badge rule-card__badge--prod">Producent · to PSU</span>
+              <span class="rule-card__limit rule-card__limit--soft">≥ typ. 200&nbsp;m</span>
+              <h4 class="rule-card__title">Mellem to strømforsyninger på samme linje</h4>
+              <p class="rule-card__text">
+                Kræver minimumsafstand <strong>efter producent</strong> (undervisning: ofte „mindst ca.
+                200&nbsp;m“). Uden korrekt afstand kan forsyningerne påvirke hinanden.
+              </p>
+            </li>
+          </ul>
+        </section>
+
+        <section class="dist-section" aria-labelledby="dist-heading-lf">
+          <h3 id="dist-heading-lf" class="dist-section__title">Linjeforstærkere</h3>
+          <div class="dist-aside">
+            <p>
+              Flere LR på samme linje skal typisk <strong>parallelkobles til linjekobleren (LC)</strong>, så de
+              alle har direkte forbindelse til LC – ikke kun serielt LR → LR som eneste kæde.
+            </p>
+          </div>
+        </section>
+
+        <section class="dist-section" aria-labelledby="dist-heading-emc">
+          <h3 id="dist-heading-emc" class="dist-section__title">KNX og 230&nbsp;V i samme installation</h3>
+          <div class="dist-aside dist-aside--emc">
+            <p>
+              Ved <strong>blotlagte enkelte ledere</strong>: typisk mindst <strong>4&nbsp;mm afstand</strong>
+              mellem KNX-leder og 230&nbsp;V-leder – eller samme isolationsklasse. Har det ene kabel fuld
+              ydre kappe, gælder andre scenarier (se jeres figur om installation af kabler).
+            </p>
+          </div>
+        </section>
+            </div>
+          </details>
+
+          <details class="topic-dropdown">
+            <summary>
+              <span>Øvelse: tjek dine målte længder</span>
+              <small>Indtast segment, PS→enhed, enhed↔enhed og LC→LR – siden tjekker mod grænserne.</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <section class="dist-section dist-section--last" aria-labelledby="dist-heading-check">
+          <h3 id="dist-heading-check" class="dist-section__title">Øvelse: tjek dine målte længder</h3>
+          <p class="dist-section__lead">
+            Udfyld kun de felter, du har målt. Tryk „Tjek tal“ – ét felt ad gangen er helt fint.
+          </p>
+          <form class="distance-check" id="distance-check-form" novalidate>
+            <div class="distance-check__stack">
+              <label class="distance-field">
+                <span class="distance-field__label">Samlet længde i ét segment</span>
+                <span class="distance-field__meta">meter · maks. 1000&nbsp;m</span>
+                <input type="number" id="dist-segment" min="0" step="1" placeholder="fx 850" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label">Længste stræk: <span lang="en">PS</span> → enhed</span>
+                <span class="distance-field__meta">meter · maks. 350&nbsp;m · fra strømforsyning (ofte mærket <span lang="en">PSU</span> på tegning)</span>
+                <input type="number" id="dist-psu-dev" min="0" step="1" placeholder="fx 120" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label">Længste stræk: enhed ↔ enhed</span>
+                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
+                <input type="number" id="dist-dev-dev" min="0" step="1" placeholder="fx 400" inputmode="decimal" />
+              </label>
+              <label class="distance-field">
+                <span class="distance-field__label"><span lang="en">LC</span> → første <span lang="en">LR</span> (line coupler → line repeater)</span>
+                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
+                <input type="number" id="dist-lc-lr" min="0" step="1" placeholder="fx 200" inputmode="decimal" />
+              </label>
+              <label class="distance-field distance-field--optional">
+                <span class="distance-field__label">Afstand mellem to PSU</span>
+                <span class="distance-field__meta">valgfrit · typisk mindst ~200&nbsp;m (fabrikant)</span>
+                <input type="number" id="dist-psu-psu" min="0" step="1" placeholder="tom hvis kun én PSU" inputmode="decimal" />
+              </label>
+            </div>
+            <div class="distance-check__actions">
+              <button type="submit" class="btn">Tjek tal</button>
+              <button type="reset" class="btn btn--ghost" id="distance-check-reset">Ryd felter</button>
+            </div>
+            <div class="distance-results" id="distance-results" role="status" aria-live="polite"></div>
+          </form>
+
+          <section class="quick-test card" data-quick-test aria-labelledby="distance-test-title">
+            <div>
+              <p class="quick-test__eyebrow">Test dig selv</p>
+              <h3 id="distance-test-title">Hvilket tal hører til <span lang="en">PS</span> → enhed?</h3>
+              <p>Du skal kontrollere længste stræk fra strømforsyning til fjerneste enhed.</p>
+            </div>
+            <div class="quick-test__answers">
+              <button type="button" data-correct="false">1000 m</button>
+              <button type="button" data-correct="true">350 m</button>
+              <button type="button" data-correct="false">700 m</button>
+            </div>
+            <p class="quick-test__feedback" aria-live="polite">
+              Rigtigt svar: Typisk maks. 350 m fra den relevante strømforsyning (<span lang="en">PS</span>/<span lang="en">PSU</span>) til fjerneste enhed på segmentet.
+            </p>
+          </section>
+              </section>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- KNX: installation -->
+      <section
+        id="panel-install"
+        class="panel page-section"
+        role="tabpanel"
+        aria-labelledby="tab-knx"
+        data-page="knx"
+        hidden
+      >
+        <div class="panel__intro">
+          <p class="panel__kicker">KNX</p>
+          <h2>Checkliste: installation og afprøvning</h2>
+          <p>
+            Skabelon til dokumentation og kvalitetssikring – afkryds undervejs
+            (gemmes lokalt i din browser).
+          </p>
+        </div>
+
+        <div class="topic-accordion">
+          <details class="topic-dropdown">
+            <summary>
+              <span>Installationscheckliste – afkryds undervejs</span>
+              <small>5 trin: forberedelse, montage, konfiguration, afprøvning og overdragelse. Krydsene gemmes i din browser.</small>
+            </summary>
+            <div class="topic-dropdown__body">
+              <ol class="wizard-steps">
+          <li class="wizard-steps__item">
+            <h3>Forberedelse</h3>
+            <ul class="checklist" data-checklist="prep"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Montage og tilslutning</h3>
+            <ul class="checklist" data-checklist="mount"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Konfiguration og programmering</h3>
+            <ul class="checklist" data-checklist="config"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Afprøvning og måling</h3>
+            <ul class="checklist" data-checklist="test"></ul>
+          </li>
+          <li class="wizard-steps__item">
+            <h3>Overdragelse</h3>
+            <ul class="checklist" data-checklist="handover"></ul>
+          </li>
+              </ol>
+
+              <div class="toolbar">
+                <button type="button" class="btn btn--ghost" id="btn-checklist-reset">
+                  Nulstil afkrydsninger
+                </button>
+              </div>
+            </div>
+          </details>
+        </div>
       </section>
 
       <!-- ETS træning -->
@@ -527,8 +1142,19 @@
           <div class="ets-ga-caption">
             <strong>Eksempel:</strong> <code>4/0/1</code> kan læses som
             <em>4. sal → lys/relæ-tændinger → lokale 406A/B tænd/sluk udgang 1</em>. ETS giver mulighed for
-            32 hovedgrupper, 8 mellemgrupper og 256 gruppeadresser. <code>0/0/0</code> er reserveret,
-            så der er 65.535 brugbare gruppeadresser.
+            <strong>32 hovedgrupper (0–31)</strong>, <strong>8 mellemgrupper (0–7)</strong> og
+            <strong>256 undergrupper (0–255)</strong>. <code>0/0/0</code> er reserveret til broadcast,
+            så der er 65.535 brugbare gruppeadresser. ETS understøtter også 2‑niveau (hovedgruppe / undergruppe 0–2047).
+          </div>
+
+          <div class="callout callout--warn dist-callout">
+            <strong>KNX‑konvention for mellemgrupper:</strong>
+            <span class="dist-callout__body">
+              KNX anbefaler en fast struktur, så projekter er nemmere at overtage. Typisk bruges:
+              hovedgruppe = etage, mellemgruppe = fagdomæne (<strong>1=Lys, 2=Varme, 3=Solafskærmning,
+              4=Ventilation, 5=Sikkerhed</strong>) og undergruppe = den konkrete funktion. På denne side er
+              strukturen tilpasset undervisningen, men strukturen kan frit defineres pr. projekt.
+            </span>
           </div>
               </section>
 
@@ -684,344 +1310,6 @@
 
           <div class="ets-exercise__result" id="ets-exercise-result" role="status" aria-live="polite"></div>
               </section>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- KNX: TP afstande -->
-      <section
-        id="panel-distances"
-        class="panel page-section dist-page"
-        role="tabpanel"
-        aria-labelledby="tab-knx"
-        data-page="knx"
-        hidden
-      >
-        <div class="panel__intro dist-page__intro">
-          <p class="panel__kicker">KNX</p>
-          <h2>KNX TP – afstande og topologi</h2>
-          <p>
-            Typiske grænser for twisted-pair (busledning), som I bruger på TEC. Tal kan afvige efter
-            <strong>medietype og producent</strong> – brug altid datablad og jeres installationsgrundlag.
-          </p>
-        </div>
-
-        <div class="topic-accordion">
-          <details class="topic-dropdown">
-            <summary>
-              <span>Buslinje, kabel og strømforsyning</span>
-              <small>Sådan ser et lille øveanlæg og et større anlæg ud – grønt KNX TP-kabel, PSU og topologi-niveauer.</small>
-            </summary>
-            <div class="topic-dropdown__body">
-              <div class="callout callout--warn dist-callout">
-          <strong>OBS.</strong>
-          <span class="dist-callout__body">
-            Træningsnotat. Den konkrete PSU, kabel og linjetype (fx med eller uden repeater)
-            kan ændre grænserne.
-          </span>
-        </div>
-
-        <section class="dist-section" aria-labelledby="dist-heading-topology">
-          <h3 id="dist-heading-topology" class="dist-section__title">Busstruktur i praksis</h3>
-          <p class="dist-section__lead">
-            Det grønne kabel er KNX TP-bussen. Om kablet kaldes linje, hovedlinje eller backbone
-            afhænger af placeringen i topologien. I små øveanlæg har du ofte kun én almindelig linje.
-          </p>
-
-          <div class="simple-topology card" aria-label="Simpel KNX topologi">
-            <div class="simple-topology__block">
-              <h4>Lille øveanlæg</h4>
-              <p class="simple-topology__line">
-                PSU 30 V → grønt KNX TP-kabel → tryk / sensor / aktuator
-              </p>
-              <p>
-                Her kabler du normalt bare én almindelig KNX-linje. Det er den type opstilling,
-                man ofte møder på skolebordet.
-              </p>
-            </div>
-
-            <div class="simple-topology__block">
-              <h4>Større anlæg</h4>
-              <p class="simple-topology__line">
-                Backbone → områdekobler → hovedlinje → linjekobler → almindelig linje → enheder
-              </p>
-              <p>
-                Backbone er et topologi-niveau. Det kan være fysisk KNX-kabel eller KNX/IP,
-                men det er ikke bare det første grønne kabel i installationen.
-              </p>
-            </div>
-          </div>
-              </section>
-            </div>
-          </details>
-
-          <details class="topic-dropdown">
-            <summary>
-              <span>Forkortelser på KNX-diagrammer</span>
-              <small>OK, LK, LF, PSU og DVC – og forskellen mellem en linjeforstærker og en aktuator.</small>
-            </summary>
-            <div class="topic-dropdown__body">
-              <section class="dist-section" aria-labelledby="dist-heading-abbr">
-          <h3 id="dist-heading-abbr" class="dist-section__title">Begreber på diagrammet</h3>
-          <p class="dist-section__lead">
-            Én betydning pr. linje – scroll roligt ned mellem sektionerne.
-          </p>
-          <dl class="abbr-list abbr-list--relaxed">
-            <div>
-              <dt>OK</dt>
-              <dd>Områdekobler – binder backbone til et områdes hovedlinje.</dd>
-            </div>
-            <div>
-              <dt>LK</dt>
-              <dd>Linjekobler – binder hovedlinje til en underlinje.</dd>
-            </div>
-            <div>
-              <dt>LF</dt>
-              <dd>
-                Linjeforstærker – en <strong>bus-enhed</strong> med egen fysisk adresse, der forstærker
-                telegrammer og opdeler linjen i segmenter (ofte op til 64 enheder pr. segment).
-              </dd>
-            </div>
-            <div>
-              <dt>PSU</dt>
-              <dd>Strømforsyning til bussen (30&nbsp;V&nbsp;DC).</dd>
-            </div>
-            <div>
-              <dt>DVC</dt>
-              <dd>
-                Enhed på linjen. I diagrammer bruges „device“ bredt om tryk, sensorer, aktuatorer osv.
-              </dd>
-            </div>
-          </dl>
-
-          <div class="dist-aside dist-aside--compare" aria-labelledby="dist-heading-lf-vs-act">
-            <h4 id="dist-heading-lf-vs-act" class="dist-aside__title">
-              Forskellen mellem linjeforstærker og fx en 6-kanels aktuator
-            </h4>
-            <ul class="dist-compare-list">
-              <li>
-                <strong>Linjeforstærker (LF)</strong> er først og fremmest til <strong>bus/topologi</strong>:
-                den genskaber eller udvider bus-signalet og hjælper med segmentering og længde.
-                Du programmerer den ikke til at tænde seks lamper med gruppeadresser på samme måde som en aktuator.
-              </li>
-              <li>
-                <strong>En 6-kanels aktuator</strong> er en <strong>funktionsenhed</strong>: du har typisk seks
-                udgange/kanaler, der knyttes til <strong>gruppeobjekter</strong>, så lys, rulgardin eller lignende
-                kan styres fra panelet eller scenarie.
-              </li>
-              <li>
-                <strong>Fælles punkt:</strong> begge har <strong>fysisk bus-adresse</strong>, tilsluttes TP‑linjen
-                og tæller med i segment-/programmeringsarbejdet. Rollen er forskellig: LF er infrastruktur
-                på linjen, mens aktuatoren udfører en funktion i installationen.
-              </li>
-            </ul>
-          </div>
-              </section>
-            </div>
-          </details>
-
-          <details class="topic-dropdown">
-            <summary>
-              <span>Afstandsregler på KNX TP</span>
-              <small>1000&nbsp;m segment, 350&nbsp;m PSU→enhed, 700&nbsp;m mellem enheder, LF-parallelkobling og afstand til 230&nbsp;V.</small>
-            </summary>
-            <div class="topic-dropdown__body">
-              <section class="dist-section" aria-labelledby="dist-heading-rules">
-          <h3 id="dist-heading-rules" class="dist-section__title">Afstande på TP (typiske tal)</h3>
-          <p class="dist-section__lead">
-            Hver regel står for sig. De to regler med <strong>700&nbsp;m</strong> gælder forskellige
-            målepunkter – læs overskriften og „mellem hvem“.
-          </p>
-
-          <ul class="rule-stack">
-            <li class="rule-card">
-              <span class="rule-card__badge">Segment</span>
-              <span class="rule-card__limit">≤ 1000&nbsp;m</span>
-              <h4 class="rule-card__title">Samlet busledning i ét segment</h4>
-              <p class="rule-card__text">
-                Alt KNX TP-kabel lagt sammen på samme segment må typisk ikke overstige 1000&nbsp;m.
-              </p>
-            </li>
-            <li class="rule-card">
-              <span class="rule-card__badge">PSU → enhed</span>
-              <span class="rule-card__limit">≤ 350&nbsp;m</span>
-              <h4 class="rule-card__title">Fra strømforsyning til fjerneste enhed</h4>
-              <p class="rule-card__text">
-                Den længeste vej langs bussen fra den relevante PSU til den enhed, der ligger længst væk.
-              </p>
-            </li>
-            <li class="rule-card">
-              <span class="rule-card__badge rule-card__badge--pair">700&nbsp;m · mellem enheder</span>
-              <span class="rule-card__limit">≤ 700&nbsp;m</span>
-              <h4 class="rule-card__title">To vilkårlige enheder på samme segment</h4>
-              <p class="rule-card__text">
-                Den største afstand målt langs bussen mellem to DVC – ikke det samme som LK→LF-reglen.
-              </p>
-            </li>
-            <li class="rule-card">
-              <span class="rule-card__badge rule-card__badge--pair-alt">700&nbsp;m · LK til LF</span>
-              <span class="rule-card__limit">≤ 700&nbsp;m</span>
-              <h4 class="rule-card__title">Linjekobler til første linjeforstærker</h4>
-              <p class="rule-card__text">
-                Gælder strækket fra LK til den første LF på den pågældende parallelgren – som på jeres tegning.
-              </p>
-            </li>
-            <li class="rule-card rule-card--special">
-              <span class="rule-card__badge rule-card__badge--prod">Producent · to PSU</span>
-              <span class="rule-card__limit rule-card__limit--soft">≥ typ. 200&nbsp;m</span>
-              <h4 class="rule-card__title">Mellem to strømforsyninger på samme linje</h4>
-              <p class="rule-card__text">
-                Kræver minimumsafstand <strong>efter producent</strong> (undervisning: ofte „mindst ca.
-                200&nbsp;m“). Uden korrekt afstand kan forsyningerne påvirke hinanden.
-              </p>
-            </li>
-          </ul>
-        </section>
-
-        <section class="dist-section" aria-labelledby="dist-heading-lf">
-          <h3 id="dist-heading-lf" class="dist-section__title">Linjeforstærkere</h3>
-          <div class="dist-aside">
-            <p>
-              Flere LF på samme linje skal typisk <strong>parallelkobles til linjekobleren</strong>, så de
-              alle har direkte forbindelse til LK – ikke kun serielt LF → LF som eneste kæde.
-            </p>
-          </div>
-        </section>
-
-        <section class="dist-section" aria-labelledby="dist-heading-emc">
-          <h3 id="dist-heading-emc" class="dist-section__title">KNX og 230&nbsp;V i samme installation</h3>
-          <div class="dist-aside dist-aside--emc">
-            <p>
-              Ved <strong>blotlagte enkelte ledere</strong>: typisk mindst <strong>4&nbsp;mm afstand</strong>
-              mellem KNX-leder og 230&nbsp;V-leder – eller samme isolationsklasse. Har det ene kabel fuld
-              ydre kappe, gælder andre scenarier (se jeres figur om installation af kabler).
-            </p>
-          </div>
-        </section>
-            </div>
-          </details>
-
-          <details class="topic-dropdown">
-            <summary>
-              <span>Øvelse: tjek dine målte længder</span>
-              <small>Indtast segment, PSU→enhed, enhed↔enhed og LK→LF – siden tjekker mod grænserne.</small>
-            </summary>
-            <div class="topic-dropdown__body">
-              <section class="dist-section dist-section--last" aria-labelledby="dist-heading-check">
-          <h3 id="dist-heading-check" class="dist-section__title">Øvelse: tjek dine målte længder</h3>
-          <p class="dist-section__lead">
-            Udfyld kun de felter, du har målt. Tryk „Tjek tal“ – ét felt ad gangen er helt fint.
-          </p>
-          <form class="distance-check" id="distance-check-form" novalidate>
-            <div class="distance-check__stack">
-              <label class="distance-field">
-                <span class="distance-field__label">Samlet længde i ét segment</span>
-                <span class="distance-field__meta">meter · maks. 1000&nbsp;m</span>
-                <input type="number" id="dist-segment" min="0" step="1" placeholder="fx 850" inputmode="decimal" />
-              </label>
-              <label class="distance-field">
-                <span class="distance-field__label">Længste stræk: PSU → enhed</span>
-                <span class="distance-field__meta">meter · maks. 350&nbsp;m</span>
-                <input type="number" id="dist-psu-dev" min="0" step="1" placeholder="fx 120" inputmode="decimal" />
-              </label>
-              <label class="distance-field">
-                <span class="distance-field__label">Længste stræk: enhed ↔ enhed</span>
-                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
-                <input type="number" id="dist-dev-dev" min="0" step="1" placeholder="fx 400" inputmode="decimal" />
-              </label>
-              <label class="distance-field">
-                <span class="distance-field__label">Linjekobler → første LF</span>
-                <span class="distance-field__meta">meter · maks. 700&nbsp;m</span>
-                <input type="number" id="dist-lk-lf" min="0" step="1" placeholder="fx 200" inputmode="decimal" />
-              </label>
-              <label class="distance-field distance-field--optional">
-                <span class="distance-field__label">Afstand mellem to PSU</span>
-                <span class="distance-field__meta">valgfrit · typisk mindst ~200&nbsp;m (fabrikant)</span>
-                <input type="number" id="dist-psu-psu" min="0" step="1" placeholder="tom hvis kun én PSU" inputmode="decimal" />
-              </label>
-            </div>
-            <div class="distance-check__actions">
-              <button type="submit" class="btn">Tjek tal</button>
-              <button type="reset" class="btn btn--ghost" id="distance-check-reset">Ryd felter</button>
-            </div>
-            <div class="distance-results" id="distance-results" role="status" aria-live="polite"></div>
-          </form>
-
-          <section class="quick-test card" data-quick-test aria-labelledby="distance-test-title">
-            <div>
-              <p class="quick-test__eyebrow">Test dig selv</p>
-              <h3 id="distance-test-title">Hvilket tal hører til PSU → enhed?</h3>
-              <p>Du skal kontrollere længste stræk fra strømforsyning til fjerneste enhed.</p>
-            </div>
-            <div class="quick-test__answers">
-              <button type="button" data-correct="false">1000 m</button>
-              <button type="button" data-correct="true">350 m</button>
-              <button type="button" data-correct="false">700 m</button>
-            </div>
-            <p class="quick-test__feedback" aria-live="polite">
-              Rigtigt svar: Typisk maks. 350 m fra den relevante PSU til fjerneste enhed på segmentet.
-            </p>
-          </section>
-              </section>
-            </div>
-          </details>
-        </div>
-      </section>
-
-      <!-- KNX: installation -->
-      <section
-        id="panel-install"
-        class="panel page-section"
-        role="tabpanel"
-        aria-labelledby="tab-knx"
-        data-page="knx"
-        hidden
-      >
-        <div class="panel__intro">
-          <p class="panel__kicker">KNX</p>
-          <h2>Checkliste: installation og afprøvning</h2>
-          <p>
-            Skabelon til dokumentation og kvalitetssikring – afkryds undervejs
-            (gemmes lokalt i din browser).
-          </p>
-        </div>
-
-        <div class="topic-accordion">
-          <details class="topic-dropdown">
-            <summary>
-              <span>Installationscheckliste – afkryds undervejs</span>
-              <small>5 trin: forberedelse, montage, konfiguration, afprøvning og overdragelse. Krydsene gemmes i din browser.</small>
-            </summary>
-            <div class="topic-dropdown__body">
-              <ol class="wizard-steps">
-          <li class="wizard-steps__item">
-            <h3>Forberedelse</h3>
-            <ul class="checklist" data-checklist="prep"></ul>
-          </li>
-          <li class="wizard-steps__item">
-            <h3>Montage og tilslutning</h3>
-            <ul class="checklist" data-checklist="mount"></ul>
-          </li>
-          <li class="wizard-steps__item">
-            <h3>Konfiguration og programmering</h3>
-            <ul class="checklist" data-checklist="config"></ul>
-          </li>
-          <li class="wizard-steps__item">
-            <h3>Afprøvning og måling</h3>
-            <ul class="checklist" data-checklist="test"></ul>
-          </li>
-          <li class="wizard-steps__item">
-            <h3>Overdragelse</h3>
-            <ul class="checklist" data-checklist="handover"></ul>
-          </li>
-              </ol>
-
-              <div class="toolbar">
-                <button type="button" class="btn btn--ghost" id="btn-checklist-reset">
-                  Nulstil afkrydsninger
-                </button>
-              </div>
             </div>
           </details>
         </div>

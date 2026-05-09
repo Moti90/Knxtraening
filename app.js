@@ -26,6 +26,9 @@
       "Download applikation efter parameter- eller linkændringer.",
       "Test funktionen fysisk: tryk, relæudgang, status og evt. visualisering.",
       "Brug ETS Group Monitor til at se gruppeadresse, værdi, DPT og afsender.",
+      "Mål busspænding på fjerneste enhed – skal være mindst DC 21 V.",
+      "Polaritetstjek: tryk programmeringsknap – LED skal lyse, ellers er polariteten omvendt.",
+      "Isolationsmåling ved DC 250 V leder mod PE: mindst 500 kΩ (afmontér overspændingsbeskyttelse først).",
       "Notér fejl: forkert gruppeadresse, forkert DPT, manglende download eller forkert fysisk adresse.",
     ],
     handover: [
@@ -546,6 +549,83 @@
       explain:
         "Applikationsdownload sender den funktionelle opsætning til enheden, så ændringerne virker i anlægget.",
     },
+    {
+      q: "Hvor mange enheder er der typisk plads til pr. linjesegment i et moderne KNX TP-anlæg (TP-256)?",
+      answers: ["64", "128", "256"],
+      correct: 2,
+      explain:
+        "I anlæg fra 2019 og frem (TP-256) tillades op til 256 enheder pr. linjesegment uden brug af linjeforstærker, hvis kabellængden er inden for 1.000 m.",
+    },
+    {
+      q: "Hvor mange grundlæggende flags har et gruppeobjekt i ETS?",
+      answers: ["3", "5", "6"],
+      correct: 2,
+      explain:
+        "De 6 flag er C (Communication), R (Read), W (Write), T (Transmit), U (Update) og I (Read on Init).",
+    },
+    {
+      q: "Hvilken minimum bus-spænding skal en KNX TP-enhed have for at fungere pålideligt?",
+      answers: ["DC 12 V", "DC 21 V", "DC 30 V"],
+      correct: 1,
+      explain:
+        "PSU leverer DC 30 V, men enheden skal mindst have DC 21 V ved klemmen for at fungere – tjekkes på fjerneste enhed.",
+    },
+    {
+      q: "Hvilken bitrate kører KNX TP med?",
+      answers: ["9.600 bit/s", "100 kbit/s", "1 Mbit/s"],
+      correct: 0,
+      explain:
+        "KNX TP sender ved 9.600 bit/s. Et bit varer ca. 104 µs, og et switch-telegram tager ca. 20 ms inkl. kvittering.",
+    },
+    {
+      q: "Hvad er hop count på et nyt KNX-telegram?",
+      answers: ["3", "6", "15"],
+      correct: 1,
+      explain:
+        "Hop count starter ved 6 og tælles 1 ned i hver kobler/forstærker. Når den når 0, stopper telegrammet – det forhindrer evige loops.",
+    },
+    {
+      q: "Hvad er default-fysisk adresse fra fabrik for en almindelig (ulastet) KNX-enhed?",
+      answers: ["0.0.0", "1.1.1", "15.15.255"],
+      correct: 2,
+      explain:
+        "Fabriksadressen er 15.15.255 for almindelige enheder. Koblere og IP-routere har default 15.15.0.",
+    },
+    {
+      q: "Hvilken KNX-multicast IP-adresse er reserveret til KNXnet/IP routing?",
+      answers: ["192.168.1.1", "224.0.23.12", "255.255.255.0"],
+      correct: 1,
+      explain:
+        "224.0.23.12 er den KNX-registrerede multicast-adresse. Den kan ændres i ETS, hvis netværket kræver det.",
+    },
+    {
+      q: "Hvilken frekvens bruger KNX RF?",
+      answers: ["433 MHz", "868 MHz", "2,4 GHz"],
+      correct: 1,
+      explain:
+        "KNX RF arbejder på 868 MHz. Rækkevidde er ca. 100 m i frit felt – betydeligt mindre indendørs.",
+    },
+    {
+      q: "Hvilken testspænding har det skærmede KNX-kabel JY(St)Y 2x2x0,8?",
+      answers: ["1,0 kV", "2,5 kV", "4,0 kV"],
+      correct: 1,
+      explain:
+        "JY(St)Y har 2,5 kV testspænding. YCYM 2x2x0,8 har 4 kV og må derfor lægges parallelt med både 230 V og 400 V.",
+    },
+    {
+      q: "Hvilken DPT bruges til scenekald (1 byte med scene-nr. og kald/gem-flag)?",
+      answers: ["DPT 1.001", "DPT 17.001", "DPT 18.001"],
+      correct: 2,
+      explain:
+        "DPT 18.001 (Scene Control) er 1 byte og indeholder både scene-nummer og et flag for kald vs. gem.",
+    },
+    {
+      q: "Hvor mange gruppeadresser er reserveret til broadcast?",
+      answers: ["0/0/0", "1/1/1", "15/7/255"],
+      correct: 0,
+      explain:
+        "0/0/0 er reserveret til broadcast og bruges bl.a. ved tildeling af individuelle adresser.",
+    },
   ];
 
   var glossary = [
@@ -626,18 +706,21 @@
     },
     {
       da: "Områdekobler",
-      en: "Area coupler",
-      note: "OK – kobler backbone til et områdes hovedlinje.",
+      en: "BC",
+      note:
+        "Backbone coupler – bogstavkode på internationale diagrammer. Nogle danske skemaer bruger stadig OK.",
     },
     {
       da: "Linjekobler",
-      en: "Line coupler",
-      note: "LK – kobler hovedlinje til underlinje.",
+      en: "LC",
+      note:
+        "Line coupler – bogstavkode på diagrammer. Nogle danske skemaer bruger stadig LK.",
     },
     {
       da: "Linjeforstærker",
-      en: "Line repeater",
-      note: "LF – bus-enhed med fysisk adresse; forlænger/opdeler linjen i segmenter.",
+      en: "LR",
+      note:
+        "Line repeater – bogstavkode på diagrammer. Bus-enhed med fysisk adresse; forlænger/opdeler linjen i segmenter. Nogle skemaer bruger LF.",
     },
     {
       da: "Bussegment",
@@ -663,6 +746,86 @@
       da: "Luxsensor",
       en: "Photosensor / illuminance sensor",
       note: "Måler lysniveau til regulering og energioptimering.",
+    },
+    {
+      da: "BCU",
+      en: "Bus Coupling Unit",
+      note: "Koblingsenhed mellem KNX-bus og applikationsmodul – findes i alle bus-enheder.",
+    },
+    {
+      da: "BCU-nøgle",
+      en: "BCU Key",
+      note: "4 bytes adgangsnøgle pr. ETS-projekt – beskytter mod uautoriseret download.",
+    },
+    {
+      da: "Hop count",
+      en: "Hop count",
+      note: "Tæller i telegrammet (start 6); tæller 1 ned i hver kobler – forhindrer endeløse loops.",
+    },
+    {
+      da: "Default-adresse",
+      en: "Default individual address",
+      note: "Fra fabrik 15.15.255 (alm. enheder), 15.15.0 (koblere/IP-routere).",
+    },
+    {
+      da: "Multicast-adresse",
+      en: "Multicast address",
+      note: "224.0.23.12 – KNX-registreret IP-adresse til KNXnet/IP routing.",
+    },
+    {
+      da: "CSMA/CA",
+      en: "Carrier Sense Multiple Access / Collision Avoidance",
+      note: "Bus-adgang i KNX TP – enheden lytter før den sender; logisk 0 vinder ved samtidighed.",
+    },
+    {
+      da: "Hovedlinje",
+      en: "Main line",
+      note: "Linje 0 i et område – samler områdets linjekoblere via en områdekobler.",
+    },
+    {
+      da: "Backbone",
+      en: "Backbone line",
+      note: "Linje 0.0 – øverste niveau, kan være TP eller KNX/IP.",
+    },
+    {
+      da: "Filtertabel",
+      en: "Filter table",
+      note: "Liste i koblere over hvilke gruppeadresser der må sendes videre. Genereres af ETS.",
+    },
+    {
+      da: "Mediekobler",
+      en: "Media coupler",
+      note: "Forbinder forskellige KNX-medier, fx TP til RF eller TP til IP.",
+    },
+    {
+      da: "DPSU",
+      en: "Decentralized Power Supply Unit",
+      note: "Decentral KNX-strømforsyning (25/40/80 mA) – op til 8 stk. pr. linje.",
+    },
+    {
+      da: "SELV",
+      en: "Safety Extra Low Voltage",
+      note: "Sikker lavspænding – KNX TP er DC 30 V SELV, må ikke jordes.",
+    },
+    {
+      da: "FDSK",
+      en: "Factory Device Setup Key",
+      note: "Unik fabrikslagt nøgle på KNX Secure-enheder, scannes/indtastes i ETS via QR/kode.",
+    },
+    {
+      da: "KNX Data Secure",
+      en: "KNX Data Secure",
+      note: "Krypterer og autentificerer telegrammer mellem KNX-enheder uanset medie.",
+    },
+    {
+      da: "KNX IP Secure",
+      en: "KNX IP Secure",
+      note: "Krypterer hele KNXnet/IP-rammen mellem KNX IP-routere på IP-niveau.",
+    },
+    {
+      da: "Domain-adresse",
+      en: "Domain address",
+      note: "Pr. KNX RF-linje/segment – sikrer at kun enheder i samme domæne kommunikerer.",
     },
   ];
 
@@ -978,9 +1141,9 @@
 
     var limits = [
       { id: "dist-segment", max: 1000, label: "Segment (samlet busledning)" },
-      { id: "dist-psu-dev", max: 350, label: "PSU til enhed" },
+      { id: "dist-psu-dev", max: 350, label: "PS til enhed" },
       { id: "dist-dev-dev", max: 700, label: "Enhed til enhed" },
-      { id: "dist-lk-lf", max: 700, label: "Linjekobler til første LF" },
+      { id: "dist-lc-lr", max: 700, label: "LC til første LR" },
     ];
 
     form.addEventListener("submit", function (e) {
